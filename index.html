@@ -36,9 +36,13 @@ a{color:var(--brick)}
 .gate-hint{font-size:.86rem;color:#AFCDA8;margin-bottom:8px}
 .gate-hint b{color:var(--marker)}
 .gate-q{font-size:1rem;color:#fff;margin-bottom:16px;font-weight:600}
-#pwdInput{width:100%;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.25);border-radius:12px;color:#fff;padding:14px;font-size:1rem;font-family:var(--font-body);text-align:center;outline:none;transition:.15s}
+#pwdInput{width:100%;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.25);border-radius:12px;color:#fff;padding:14px;font-size:1.15rem;font-family:var(--font-body);text-align:center;outline:none;transition:.15s;-webkit-text-security:disc;text-security:disc}
+#pwdInput.show-raw{-webkit-text-security:none;text-security:none}
 #pwdInput::placeholder{color:rgba(255,255,255,.4)}
 #pwdInput:focus{border-color:var(--marker);background:rgba(255,255,255,.18)}
+.pwd-row{position:relative}
+.pwd-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#AFCDA8;font-size:.78rem;cursor:pointer;padding:4px 8px;border-radius:6px}
+.pwd-toggle:hover{background:rgba(255,255,255,.1);color:#fff}
 #unlockBtn{width:100%;margin-top:14px;background:var(--marker);color:var(--forest);border:none;border-radius:12px;padding:14px;font-family:var(--font-head);font-size:1rem;font-weight:700;cursor:pointer;transition:.15s}
 #unlockBtn:active{transform:scale(.98)}
 #unlockBtn:disabled{opacity:.5}
@@ -98,12 +102,23 @@ a{color:var(--brick)}
 .sec-no{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;background:var(--forest);color:var(--cream);border-radius:50%;font-family:var(--font-mono);font-size:.86rem;font-weight:700;flex-shrink:0}
 .block{margin-bottom:14px}
 .b-h2{font-family:var(--font-head);font-size:1rem;color:var(--brick);margin:14px 0 6px;font-weight:700;padding-left:10px;border-left:4px solid var(--brick)}
-.b-body{background:var(--paper);border-radius:10px;padding:12px 14px;margin:6px 0;font-size:.94rem;line-height:1.85}
-.b-body .blank{display:inline-block;min-width:50px;border-bottom:2px solid var(--brick);color:var(--brick);font-weight:600;text-align:center;margin:0 2px}
-.b-body .err{display:block;background:#fff6e8;border-left:3px solid var(--brick);padding:6px 10px;margin:6px 0;border-radius:4px;font-size:.88rem;color:#7a3a1a}
+.b-body{background:var(--paper);border-radius:10px;padding:12px 14px;margin:6px 0;font-size:.94rem;line-height:2}
 .tbl-item{background:var(--paper);border-radius:10px;padding:12px 14px;margin:8px 0}
-.tbl-item .lbl{display:inline-block;background:var(--sage);color:var(--forest);font-size:.78rem;font-weight:700;padding:2px 10px;border-radius:var(--radius-pill);margin-bottom:6px}
-.tbl-item .txt{font-size:.94rem;line-height:1.85}
+.tbl-item .lbl{display:inline-block;background:var(--sage);color:var(--forest);font-size:.78rem;font-weight:700;padding:2px 12px;border-radius:var(--radius-pill);margin-bottom:8px}
+.tbl-item .ln{font-size:.94rem;line-height:2;margin:2px 0}
+/* 挖空占位（醒目彩色框，点击可翻转显示答案） */
+.blank{display:inline-block;min-width:72px;border:1.5px dashed var(--brick);background:linear-gradient(180deg,rgba(245,224,138,.35),rgba(245,224,138,.15));color:var(--brick);border-radius:6px;padding:1px 10px;margin:0 3px;cursor:pointer;transition:all .15s;text-align:center;font-weight:600;vertical-align:baseline;font-size:.82rem;line-height:1.5}
+.blank:hover{background:linear-gradient(180deg,rgba(245,224,138,.7),rgba(245,224,138,.4));transform:translateY(-1px);box-shadow:0 2px 6px rgba(181,72,42,.25)}
+.blank.revealed{color:#fff;background:var(--correct);border:1.5px solid var(--correct);border-radius:6px;min-width:auto;transform:none;box-shadow:none}
+.blank.revealed::before{content:"✓ "}
+.blank .ph{font-weight:600;letter-spacing:.05em}
+.blank.empty{border-style:dotted;background:rgba(181,72,42,.04)}
+.blank.empty .ph{opacity:.6}
+/* 行内【易错点】及对错标记 */
+.err{display:block;background:#fff3e8;border:1px solid rgba(181,72,42,.3);border-left:4px solid var(--brick);padding:8px 14px;margin:8px 0 8px 4px;border-radius:0 8px 8px 0;font-size:.88rem;color:#6a3216;line-height:1.75}
+.err .tag{display:inline-block;background:var(--brick);color:#fff;font-size:.7rem;padding:2px 9px;border-radius:5px;margin-right:8px;font-weight:700;letter-spacing:.03em}
+.wrong{color:var(--wrong);font-weight:700;padding:0 2px}
+.right{color:var(--correct);font-weight:700;padding:0 2px}
 
 /* 章节标题旁「听这章」按钮 */
 .voice-btn{display:inline-block;vertical-align:middle;padding:.3em .9em;border:1px solid var(--forest);border-radius:var(--radius-pill);background:var(--cream);color:var(--forest);font:600 .8rem/1.2 var(--font-body);cursor:pointer;transition:background .15s}
@@ -119,8 +134,8 @@ a{color:var(--brick)}
   box-shadow:-4px 0 14px rgba(0,0,0,.18);font-family:var(--font-head);font-size:.85rem;
   overflow:hidden;transition:width .42s cubic-bezier(.4,0,.2,1), box-shadow .3s ease;width:1.9em;
 }
-#voiceFab .fab-icon{font-size:1.15rem;writing-mode:vertical-rl;text-orientation:upright;letter-spacing:.1em;white-space:nowrap;flex-shrink:0}
-#voiceFab .fab-text{white-space:nowrap;opacity:0;margin-left:.6em;transition:opacity .28s ease .12s}
+#voiceFab .fab-icon{font-size:1.15rem;writing-mode:vertical-rl;text-orientation:upright;letter-spacing:.1em;white-space:nowrap;flex-shrink:0;pointer-events:none}
+#voiceFab .fab-text{white-space:nowrap;opacity:0;margin-left:.6em;transition:opacity .28s ease .12s;pointer-events:none}
 #voiceFab:hover{width:8.6em;box-shadow:-6px 0 22px rgba(0,0,0,.25)}
 #voiceFab:hover .fab-text{opacity:1}
 #voiceFab.beat{animation:voiceBeat 1.6s ease-in-out infinite}
@@ -163,7 +178,10 @@ a{color:var(--brick)}
     <div class="gate-card">
       <div class="gate-hint">密码提示：<b>这是给谁准备的呀？</b></div>
       <div class="gate-q">请输入开启口令</div>
-      <input id="pwdInput" type="password" placeholder="输入口令" autocomplete="off" autocapitalize="off">
+      <div class="pwd-row">
+        <input id="pwdInput" type="text" placeholder="输入口令" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="text">
+        <button class="pwd-toggle" id="pwdToggle" type="button">显示</button>
+      </div>
       <button id="unlockBtn">开启电台</button>
       <div id="gateErr"></div>
     </div>
@@ -384,9 +402,10 @@ async function deriveKey(password, salt, iters){
 async function tryUnlock(password){
   unlockBtn.disabled=true; gateErr.textContent='正在解锁…';
   try{
+    var pw=(password||'').trim();
     var salt=b64ToBuf(window.__SALT);
     var cipherBuf=b64ToBuf(window.__CIPHER);
-    var key=await deriveKey(password, salt, window.__ITERS);
+    var key=await deriveKey(pw, salt, window.__ITERS);
     // nonce(12) 前置
     var nonce=cipherBuf.slice(0,12);
     var data=cipherBuf.slice(12);
@@ -398,14 +417,30 @@ async function tryUnlock(password){
     app.classList.add('shown');
   }catch(e){
     gateErr.textContent='口令不对哦，再想想这是给谁准备的？';
-    pwdInput.select();
+    pwdInput.focus(); pwdInput.select();
   }finally{
     unlockBtn.disabled=false;
   }
 }
 
 unlockBtn.addEventListener('click', function(){ tryUnlock(pwdInput.value); });
-pwdInput.addEventListener('keydown', function(e){ if(e.key==='Enter') tryUnlock(pwdInput.value); });
+// Enter 兼容中文输入法：组合过程中 keyCode===229，此时不触发解锁
+pwdInput.addEventListener('keydown', function(e){
+  if(e.key==='Enter' && !e.isComposing && e.keyCode!==229){
+    e.preventDefault();
+    tryUnlock(pwdInput.value);
+  }
+});
+// 显示/隐藏口令（中文输入时方便确认）
+var pwdToggle=document.getElementById('pwdToggle');
+if(pwdToggle){
+  pwdToggle.addEventListener('click', function(){
+    var raw=pwdInput.classList.toggle('show-raw');
+    pwdToggle.textContent=raw?'隐藏':'显示';
+  });
+}
+// 自动聚焦
+setTimeout(function(){ pwdInput && pwdInput.focus(); }, 300);
 
 // ---- 渲染应用（解密成功后调用，此时才构建正文 DOM）----
 var SECT_TRACK={}; // 节标题/序号 -> track id，用于「听这章」按钮
@@ -457,10 +492,14 @@ function renderApp(parts){
             cHtml+='<div class="b-h2">'+esc(b.text)+'</div>';
           }else if(b.type==='table'){
             b.items.forEach(function(it){
-              cHtml+='<div class="tbl-item"><span class="lbl">'+esc(it.label||'·')+'</span><div class="txt">'+renderBlanks(it.text)+'</div></div>';
+              cHtml+='<div class="tbl-item"><span class="lbl">'+esc(it.label||'·')+'</span>';
+              (it.lines||[]).forEach(function(ln){
+                cHtml+='<div class="ln">'+renderLine(ln)+'</div>';
+              });
+              cHtml+='</div>';
             });
           }else{
-            cHtml+='<div class="b-body">'+renderBlanks(b.text)+'</div>';
+            cHtml+='<div class="b-body">'+renderLine(b.text||'')+'</div>';
           }
         });
         cHtml+='</section>';
@@ -488,11 +527,95 @@ function mapSectToTrack(sectIdx, title){
   return null;
 }
 
-function renderBlanks(text){
-  // 把 ____ 渲染成空格填空样式；转义 HTML
-  var esc2=esc(text);
-  return esc2.replace(/_{2,}/g, '<span class="blank">　　</span>');
+function renderLine(text){
+  // 把一行文本渲染成 HTML：
+  //  - [答案]  → 可点击翻转的填空（默认显示占位，点击露答案）
+  //  - ____    → 无答案的占位挖空（点击提示）
+  //  - 【易错点】... (×)/(√) → 易错点高亮块
+  // 先处理【易错点】（单独成段）
+  var html='';
+  // 拆出【易错点】片段
+  var parts = text.split(/(【易错点】[^】]*】[^【]*)/g);
+  // 上面正则不准，改用更稳的方式：按"【易错点】"切，每段找结尾
+  parts = splitErr(text);
+  parts.forEach(function(part){
+    if(part.type==='err'){
+      html+='<span class="err"><span class="tag">易错</span>'+renderBlanks(part.text)+'</span>';
+    }else{
+      html+=renderBlanks(part.text);
+    }
+  });
+  return html;
 }
+
+function splitErr(text){
+  // 把文本切成 [{type:'normal'|'err', text}]。易错点从【易错点】开始到行尾或下一个【
+  var out=[];
+  var re=/【易错点】/g;
+  var last=0, m;
+  while((m=re.exec(text))!==null){
+    if(m.index>last) out.push({type:'normal',text:text.slice(last,m.index)});
+    // 易错点段：从【易错点】到下一个【开始或行尾
+    var rest=text.slice(m.index);
+    var next=rest.search(/【(?!易错点】)/);
+    var seg = next>0 ? rest.slice(0,next) : rest;
+    out.push({type:'err',text:seg});
+    last=m.index+seg.length;
+    re.lastIndex=last;
+  }
+  if(last<text.length) out.push({type:'normal',text:text.slice(last)});
+  return out;
+}
+
+function renderBlanks(text){
+  // 处理 [答案] 和 ____ 挖空，转义其余 HTML，并给 (×)(√) 上色
+  var out='';
+  var i=0;
+  while(i<text.length){
+    if(text[i]==='['){
+      var end=text.indexOf(']',i);
+      if(end>0){
+        var ans=text.slice(i+1,end);
+        out+='<span class="blank" data-ans="'+esc(ans)+'" onclick="revealBlank(this)"><span class="ph">挖空</span></span>';
+        i=end+1;
+        continue;
+      }
+    }
+    if(text.slice(i,i+4)==='____'){
+      out+='<span class="blank empty" onclick="revealBlank(this)"><span class="ph">挖空</span></span>';
+      i+=4;
+      continue;
+    }
+    // (×) → 错，(√) → 对
+    if(text.slice(i,i+3)==='(×)'){ out+='<span class="wrong">(×)</span>'; i+=3; continue; }
+    if(text.slice(i,i+3)==='(√)'){ out+='<span class="right">(√)</span>'; i+=3; continue; }
+    // 转义其他字符
+    var ch=text[i];
+    if(ch==='&') out+='&amp;';
+    else if(ch==='<') out+='&lt;';
+    else if(ch==='>') out+='&gt;';
+    else if(ch==='"') out+='&quot;';
+    else out+=ch;
+    i++;
+  }
+  return out;
+}
+
+// 全局：点击挖空翻转显示/隐藏答案
+window.revealBlank=function(el){
+  if(el.classList.contains('empty')){
+    // 无答案的挖空：闪烁提示
+    el.style.background='rgba(245,224,138,.6)';
+    setTimeout(function(){ el.style.background=''; }, 600);
+    return;
+  }
+  var revealed=el.classList.toggle('revealed');
+  if(revealed){
+    el.innerHTML=el.getAttribute('data-ans')||'';
+  }else{
+    el.innerHTML='<span class="ph">挖空</span>';
+  }
+};
 
 function esc(s){
   s=String(s==null?'':s);
@@ -639,7 +762,8 @@ function bindMobileSidebar(){
       if(idx >= 0){ load(idx); play(); }
       return;
     }
-    if(t.id === 'voiceFab'){ show(); if(audio.paused && !audio.src){ load(0); } if(audio.paused){ play(); } return; }
+    var fabHit = t.closest ? t.closest('#voiceFab') : (t.id==='voiceFab' ? t : null);
+    if(fabHit){ show(); if(audio.paused && !audio.src){ load(0); } if(audio.paused){ play(); } return; }
     if(!player || !player.contains(t)) return;
     if(t.classList.contains('vp-play')){ toggle(); return; }
     if(t.classList.contains('vp-prev')){ prev(); return; }
