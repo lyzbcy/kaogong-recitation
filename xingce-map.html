@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行测速通 - 理解地图</title>
+<style>
+:root{
+  --cream:#FAF6EB; --paper:#F3EDDD; --forest:#1E3A24; --sky:#BCD8EE;
+  --sage:#AFCDA8; --ink:#1A2018; --marker:#F5E08A; --brick:#B5482A;
+  --correct:#2F7D46; --wrong:#B5482A;
+  --font-display:"Archivo Black","Noto Sans SC","PingFang SC",sans-serif;
+  --font-head:"Poppins","Noto Sans SC","PingFang SC",sans-serif;
+  --font-body:-apple-system,"PingFang SC","Noto Sans SC",sans-serif;
+  --font-mono:"Roboto Mono","JetBrains Mono",monospace;
+  --radius-pill:999px; --radius-card:14px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--font-body);line-height:1.7;font-size:16px}
+a{color:var(--brick)}
+/* ===== 两栏骨架 ===== */
+.layout{display:grid;grid-template-columns:270px 1fr;max-width:1180px;margin:0 auto;gap:0}
+/* 左侧固定侧边栏 */
+.sidebar{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;background:var(--forest);color:#EAF3E0;padding:22px 18px}
+.sidebar h1{font-family:var(--font-display);font-size:1.35rem;line-height:1.25;margin:0 0 4px;color:#fff}
+.sidebar .sub{font-size:.78rem;color:#AFCDA8;margin-bottom:18px}
+.progress-wrap{background:rgba(255,255,255,.12);border-radius:var(--radius-pill);height:14px;overflow:hidden;margin-bottom:6px}
+#barFill{height:100%;width:0;background:var(--marker);transition:width .3s}
+.bar-row{display:flex;justify-content:space-between;font-size:.8rem;color:#D6E7C8;margin-bottom:18px}
+.nav{list-style:none;padding:0;margin:0}
+.nav li{margin:2px 0}
+.nav a{display:block;color:#D6E7C8;text-decoration:none;font-size:.86rem;padding:7px 10px;border-radius:8px;transition:.15s}
+.nav a:hover{background:rgba(255,255,255,.1);color:#fff}
+.nav a .num{display:inline-block;width:26px;color:var(--marker);font-family:var(--font-mono);font-size:.78rem}
+.side-foot{margin-top:18px;font-size:.72rem;color:#8FAE84;line-height:1.5}
+/* 右侧主区：严格单列 */
+.main{padding:30px 34px 80px;max-width:820px}
+section{margin-bottom:42px;scroll-margin-top:20px}
+h2.sec{font-family:var(--font-head);font-size:1.45rem;color:var(--forest);border-left:6px solid var(--brick);padding-left:12px;margin:0 0 18px}
+.sec-id{display:inline-block;background:var(--forest);color:var(--marker);font-family:var(--font-mono);font-size:.78rem;padding:2px 8px;border-radius:6px;margin-right:8px}
+h3{font-size:1.1rem;color:var(--forest);margin:0 0 8px}
+p{margin:0 0 12px}
+/* 卡片 */
+.card{background:var(--paper);border-radius:var(--radius-card);padding:18px 20px;margin-bottom:14px;border:1px solid #E4DAC0}
+.card.goal{border-left:5px solid var(--sage)}
+.card.bg{border-left:5px solid var(--sky)}
+.card.judge{border-left:5px solid var(--marker)}
+.card.concept{border-left:5px solid var(--forest)}
+.card.miss{border-left:5px solid var(--brick)}
+.label{display:inline-block;font-size:.72rem;font-family:var(--font-mono);padding:2px 8px;border-radius:5px;margin-right:6px;vertical-align:middle}
+.label.fact{background:var(--sage);color:var(--forest)}
+.label.judge{background:var(--marker);color:var(--ink)}
+.label.infer{background:var(--sky);color:var(--ink)}
+.label.eg{background:var(--brick);color:#fff}
+.src{display:block;background:#E8E0C8;border-radius:6px;padding:6px 10px;font-size:.82rem;color:#5a5040;margin-top:8px;font-family:var(--font-mono)}
+.src::before{content:"📎 原文依据："}
+.note-bg{background:#FBF3D0;border:1px dashed #D4B85A;border-radius:6px;padding:8px 12px;font-size:.88rem;margin:8px 0}
+.note-bg b{color:var(--brick)}
+/* 结构地图 */
+.map-node{background:var(--paper);border:2px solid var(--forest);border-radius:10px;padding:12px 16px;margin-bottom:0;position:relative}
+.map-row{display:flex;flex-direction:column;gap:0}
+.map-rel{font-size:.78rem;color:var(--brick);font-family:var(--font-mono);padding:4px 0 4px 14px}
+/* 数据表 */
+table.stats{width:100%;border-collapse:collapse;font-size:.88rem;background:#fff;border-radius:8px;overflow:hidden}
+table.stats th,table.stats td{border:1px solid #E0D6B8;padding:8px 10px;text-align:left}
+table.stats th{background:var(--forest);color:#fff;font-family:var(--font-head);font-weight:600}
+table.stats td.hl{background:#F0F7E8;font-weight:700;color:var(--correct)}
+table.stats td.lo{background:#FBEDE6;color:var(--brick)}
+/* 互动题 */
+.task{background:#fff;border:1px solid #D9CFAE;border-radius:var(--radius-card);padding:16px 18px;margin-bottom:16px}
+.task .q{font-weight:600;margin-bottom:10px}
+.task .q .qn{color:var(--brick);font-family:var(--font-mono);margin-right:6px}
+.opts{display:flex;flex-direction:column;gap:7px;margin-bottom:10px}
+.opt{text-align:left;background:var(--paper);border:1px solid #D9CFAE;border-radius:8px;padding:9px 12px;cursor:pointer;font-size:.92rem;font-family:var(--font-body);transition:.12s}
+.opt:hover{background:#EFE7CF}
+.opt.selected{background:var(--sky);border-color:var(--forest);font-weight:600}
+.check{background:var(--forest);color:#fff;border:none;border-radius:8px;padding:8px 20px;cursor:pointer;font-family:var(--font-head);font-size:.9rem}
+.check:hover{background:#2a4f33}
+.feedback{margin-top:10px;padding:9px 12px;border-radius:8px;font-size:.88rem;background:#F0EAD6;min-height:20px}
+.feedback.ok{background:#E2F0E0;color:var(--correct)}
+.feedback.no{background:#FBEDE6;color:var(--wrong)}
+.feedback .src{background:rgba(0,0,0,.05);margin-top:6px}
+/* 错题回流 + 报告 */
+.wrong-box{background:var(--paper);border-radius:10px;padding:14px 16px}
+.wrong-box ul{margin:6px 0 0;padding-left:18px}
+#report{width:100%;min-height:120px;background:#fff;border:1px solid #D9CFAE;border-radius:8px;padding:10px;font-family:var(--font-mono);font-size:.82rem;white-space:pre-wrap}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.btn{background:var(--brick);color:#fff;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-family:var(--font-head);font-size:.86rem}
+.btn.alt{background:var(--forest)}
+/* 自推广浮条 */
+.promo-fab{position:fixed;right:18px;bottom:18px;z-index:999}
+.promo-fab button{background:var(--brick);color:#fff;border:none;border-radius:var(--radius-pill);padding:11px 18px;cursor:pointer;font-family:var(--font-head);font-size:.86rem;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.modal-mask{display:none;position:fixed;inset:0;background:rgba(20,30,18,.55);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal-mask.open{display:flex}
+.modal{background:var(--cream);border-radius:16px;max-width:460px;width:100%;padding:24px;max-height:88vh;overflow-y:auto}
+.modal h3{margin-bottom:6px}
+.modal .avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--sage)}
+.modal .tag{display:inline-block;background:var(--sage);color:var(--forest);font-size:.72rem;padding:2px 8px;border-radius:5px}
+.qr-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px}
+.qr-cell{background:var(--paper);border-radius:10px;padding:12px 8px;text-align:center;font-size:.78rem}
+.qr-cell .ph{width:100%;aspect-ratio:1;background:#fff;border:1px dashed #C9BD9A;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;font-size:1.2rem}
+.sticker-preview{display:flex;gap:6px;justify-content:center;margin-bottom:6px}
+.sticker-preview span{font-size:1.3rem}
+/* 页脚 */
+footer{text-align:center;padding:30px 20px;font-size:.84rem;color:#6b6048;border-top:1px solid #E0D6B8;margin-top:40px}
+footer a{font-weight:700}
+/* 移动端 */
+@media(max-width:820px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{position:static;height:auto}
+  .nav{display:flex;flex-wrap:wrap;gap:4px}
+  .nav li{margin:0}
+  .main{padding:20px 16px 60px}
+  .qr-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ===== 左侧固定侧边栏 ===== -->
+  <aside class="sidebar">
+    <h1>行测速通</h1>
+    <div class="sub">行政职业能力测验 · 理解地图</div>
+    <div class="progress-wrap"><div id="barFill"></div></div>
+    <div class="bar-row"><span>任务进度</span><span id="barNum">0 / 0</span></div>
+    <ul class="nav" id="navList"></ul>
+    <div class="side-foot">
+      保真 &gt; 结构清楚 &gt; 理解友好。<br>
+      每个判断都标了出处。
+    </div>
+  </aside>
+
+  <!-- ===== 右侧主区（严格单列） ===== -->
+  <main class="main">
+
+    <!-- 01 学习目标 -->
+    <section id="s1">
+      <h2 class="sec"><span class="sec-id">01</span>学习目标与阅读路径</h2>
+      <p>这一份要解决一个问题：<b>在有限时间内，怎样把行测从"乱做一气"变成"知道每一分钟该花在哪"</b>。</p>
+      <p>读完你应该能做到下面这些（都是可检查的动作，不是口号）：</p>
+      <div class="card goal"><b>目标 1</b>：能说出行测五大模块各自的<b>题量、正确率目标、性价比排序</b>，并解释为什么资料分析排第一。</div>
+      <div class="card goal"><b>目标 2</b>：能复述"<b>先摸底 → 分模块突破 → 真题为王</b>"这条备考主线，并指出它出自哪个仓库的观点。</div>
+      <div class="card goal"><b>目标 3</b>：能区分"事实 / 判断 / 推论 / 例子"四类信息——哪些是考试客观结构，哪些是上岸者的经验主张。</div>
+      <div class="card goal"><b>目标 4</b>：能指出至少 3 个新手最常踩的坑（比如常识硬背、数量死磕），并说出对应的避坑方法。</div>
+      <div class="card goal"><b>目标 5</b>：能为自己的薄弱模块提出 1 个具体的下一步训练问题。</div>
+    </section>
+
+    <!-- 02 零基础背景包 -->
+    <section id="s2">
+      <h2 class="sec"><span class="sec-id">02</span>零基础背景包</h2>
+      <p>正式拆解前，先补 5 个读懂本文必须知道的概念。这些是<span class="label fact">背景补充</span>，不是任何人的主张。</p>
+
+      <div class="card bg">
+        <h3>1. 行测是什么</h3>
+        <p>全称"<b>行政职业能力测验</b>"，是公务员笔试的<b>客观题</b>科目——全部为单项选择题，机器阅卷。它和"申论"（主观题写作）相对。</p>
+        <span class="note-bg"><b>背景补充</b>：行测考的是"能力"而非"知识记忆"，所以短期靠背书提分有限，靠的是方法和熟练度。</span>
+      </div>
+      <div class="card bg">
+        <h3>2. 五大模块</h3>
+        <p>行测固定由 5 块组成：<b>常识判断、言语理解与表达、数量关系、判断推理、资料分析</b>。下文的一切策略都围绕这 5 块的"性价比差异"展开。</p>
+      </div>
+      <div class="card bg">
+        <h3>3. "性价比"指什么</h3>
+        <p>这里说的性价比 = <b>投入同等复习时间，能换回多少分</b>。资料分析"性价比最高"意味着：花同样的时间练它，提分最快、最稳。</p>
+      </div>
+      <div class="card bg">
+        <h3>4. 题量与时间压力</h3>
+        <p>国考行测约 <b>130–135 题、120 分钟</b>，平均每题不足 1 分钟。<b>做不完是常态</b>，所以"取舍"本身就是一种核心能力。</p>
+      </div>
+      <div class="card bg">
+        <h3>5. "benchmark"是什么</h3>
+        <p>程序员考公仓库里的词，指"<b>先用一套真题摸底，建立基准分数</b>"，之后才知道自己的弱项在哪、提了多少。这是后面策略的起点。</p>
+      </div>
+    </section>
+
+    <!-- 03 原文问题定位 -->
+    <section id="s3">
+      <h2 class="sec"><span class="sec-id">03</span>原文问题定位</h2>
+      <p>这份"速通"地图综合了多个上岸经验仓库与公开备考资料。它表面在讲"行测怎么复习"，深层其实在回答<b>一个问题</b>：</p>
+      <div class="card judge">
+        <p style="font-size:1.08rem;font-weight:600">"120 分钟、130 多题、做不完，到底该把时间和精力投到哪，才能最快把分数拉到上岸线（综合正确率约 70%）？"</p>
+        <span class="src">综合 coder2gwy / developer2gwy 等程序员考公仓库的备考主张；70% 上岸门槛来自备考资料的题量×正确率换算。</span>
+      </div>
+      <p>如果只记一个问题，就记上面这个。<b>行测速通的本质不是"学更多知识"，而是"做更聪明的取舍"</b>——这是贯穿全文的主线。</p>
+    </section>
+
+    <!-- 04 原文结构地图 -->
+    <section id="s4">
+      <h2 class="sec"><span class="sec-id">04</span>原文结构地图</h2>
+      <p>这份攻略的结构类型是<b>「问题 → 判断 → 证据 → 风险」的商业分析型</b>，不是单线因果链。主线是"时间该投到哪"，下面是它的逻辑骨架：</p>
+
+      <div class="map-row">
+        <div class="map-node"><b>起点：120 分钟做不完 130+ 题</b><br><span style="font-size:.85rem;color:#666">客观约束 → 必须取舍</span></div>
+        <div class="map-rel">↓ 问题：投到哪</div>
+        <div class="map-node"><b>判断：按"性价比"给 5 模块排序</b><br><span style="font-size:.85rem;color:#666">资料分析 &gt; 判断推理 &gt; 言语 &gt; 数量 &gt; 常识</span></div>
+        <div class="map-rel">↓ 证据：题量×正确率×提分速度</div>
+        <div class="map-node"><b>证据：五大模块题量与目标正确率表</b>（见下方数据表）</div>
+        <div class="map-rel">↓ 方法：怎么执行</div>
+        <div class="map-node"><b>方法：先摸底 benchmark → 分模块突破 → 真题为王 → 错题回流</b></div>
+        <div class="map-rel">↓ 风险：常见误读</div>
+        <div class="map-node"><b>风险：把"取舍"误读成"放弃某模块"、常识硬背、数量死磕</b></div>
+      </div>
+      <span class="src">结构骨架综合自 coder2gwy（"先限时做真题摸底，再按题型逐项攻克"）与 developer2gwy（行测知识模块清单按分数段拆解学习量）。</span>
+    </section>
+
+    <!-- 05 核心判断与依据 -->
+    <section id="s5">
+      <h2 class="sec"><span class="sec-id">05</span>核心判断与依据</h2>
+      <p>下面 6 个核心判断都有出处。<span class="label fact">事实</span>=考试客观结构；<span class="label judge">判断</span>=上岸者的经验主张；<span class="label infer">推论</span>=从前者推出的策略。</p>
+
+      <div class="card judge">
+        <h3>判断 1：先模考摸底，建立 benchmark</h3>
+        <p><span class="label judge">判断</span>开始复习前，先<b>限时做一套近年真题</b>，建立基准分数，明确弱项模块，而不是一上来就盲目刷题。</p>
+        <span class="src">coder2gwy 仓库："先限时做真题摸底，再按题型叶子节点逐项攻克。"</span>
+      </div>
+
+      <div class="card judge">
+        <h3>判断 2：资料分析性价比最高，优先突破</h3>
+        <p><span class="label infer">推论</span>在五大模块里，<b>资料分析</b>投入产出比最高——掌握速算技巧和找数能力后，正确率能较快拉到 80% 以上。<b>它和判断推理是短期提分最快的两块</b>。</p>
+        <span class="src">备考资料模块表：资料分析目标正确率 80%，标注"性价比最高，速算技巧+找数能力是关键"；判断推理标注"提分最快"。</span>
+      </div>
+
+      <div class="card judge">
+        <h3>判断 3：数量关系要学会"取舍"</h3>
+        <p><span class="label judge">判断</span>数量关系题量大、耗时长、得分难，<b>不是用来全做的</b>。策略是掌握常考题型（行程、工程、排列组合），其余果断猜答跳过，把时间让给资料分析。</p>
+        <span class="src">备考资料：数量关系目标正确率仅 50%，要点"学会取舍"；并指出"涉及计算时小屏不便"，暗示它时间成本高。</span>
+      </div>
+
+      <div class="card judge">
+        <h3>判断 4：常识判断短期提分有限，靠日常积累</h4>
+        <p><span class="label fact">事实</span>常识判断覆盖面极广（政治、法律、科技、人文…），<span class="label infer">推论</span>因此<b>短期突击性价比最低</b>。它的复习定位是"日常积累+考前扫盲"，不要占用资料分析的黄金时间。</p>
+        <span class="src">备考资料：常识判断"注重日常积累，短期提分有限，性价比最低"。</span>
+      </div>
+
+      <div class="card judge">
+        <h3>判断 5：真题为王</h3>
+        <p><span class="label judge">判断</span>至少刷<b>近 5 年国考 + 省考真题</b>，真题的命题套路比模拟题可靠得多。</p>
+        <span class="src">备考资料："至少刷近5年国考+省考真题"；yunduanqiqu 仓库提供申论真题库、行测刷题资料。</span>
+      </div>
+
+      <div class="card judge">
+        <h3>判断 6：错题必须系统管理</h3>
+        <p><span class="label infer">推论</span>只刷不总结等于白刷。<b>错题归档、分析弱点</b>是提分闭环的关键一环——有专门的考公追踪工具把这件事产品化。</p>
+        <span class="src">KaguraNanaga/kaogong-study-tracker 仓库：可"归档错题、分析弱点、定时提醒"。</span>
+      </div>
+    </section>
+
+    <!-- 06 关键概念拆解 -->
+    <section id="s6">
+      <h2 class="sec"><span class="sec-id">06</span>关键概念拆解</h2>
+
+      <div class="card concept">
+        <h3>资料分析</h3>
+        <p><b>定义</b>：给一段统计材料（表格/图形/文字），围绕它出 5 道左右计算与比较题。</p>
+        <p><b>人话</b>：考的是"快速读懂图表 + 估算"，不是精确笔算。</p>
+        <p><b>关系</b>：它是"性价比之首"——和数量关系都涉及计算，但资料分析<b>套路固定、提分快</b>，数量关系<b>灵活、耗时长</b>。</p>
+        <p><b>不要误解成</b>："因为是计算题所以和数量关系一样该放后面做。"恰恰相反，它是必须稳拿的得分点。</p>
+      </div>
+
+      <div class="card concept">
+        <h3>判断推理</h3>
+        <p><b>定义</b>：含<b>图形推理、类比推理、定义判断、逻辑判断</b>四类，共约 40 题。</p>
+        <p><b>人话</b>：考"找规律"和"逻辑链条"，技巧性最强，学会套路后立竿见影。</p>
+        <p><b>关系</b>：和资料分析并列为"提分最快"双引擎；且<b>适合手机碎片刷题</b>（不依赖大量计算）。</p>
+        <p><b>不要误解成</b>："逻辑判断 = 凭感觉。"它有严格的推理规则（逆否命题、加强削弱等）。</p>
+      </div>
+
+      <div class="card concept">
+        <h3>言语理解与表达</h3>
+        <p><b>定义</b>：含<b>逻辑填空</b>（选词）和<b>片段阅读</b>（读段选主旨）两大块，约 40 题。</p>
+        <p><b>人话</b>：考"语感 + 抓作者观点"，题量最大，是<b>核心得分基本盘</b>。</p>
+        <p><b>关系</b>：性价比中等偏上——靠持续刷题保持语感，难短期暴涨，但绝不能丢。</p>
+        <p><b>不要误解成</b>："语感天生的，练没用。"逻辑填空的"语境提示词"、片段阅读的"主题句定位"都是可训练技巧。</p>
+      </div>
+
+      <div class="card concept">
+        <h3>取舍（核心策略概念）</h3>
+        <p><b>定义</b>：在有限时间内，<b>主动放弃部分低性价比题目</b>（如难题、数量中耗时的题），把时间让给高性价比题。</p>
+        <p><b>人话</b>：不是每题都要做对，是<b>总分最大化</b>。</p>
+        <p><b>关系</b>：取舍 ≠ 放弃整个模块。它的对象是"<b>单题</b>"——资料分析里也会有个别难题该跳。</p>
+        <p><b>不要误解成</b>："数量关系直接全放弃。"正确做法是挑常考题型做，剩下的蒙。</p>
+      </div>
+
+      <div class="card concept">
+        <h3>错题回流</h3>
+        <p><b>定义</b>：把做错的题归档，定期回看，找出自己的<b>弱点模式</b>（是哪类题反复错）。</p>
+        <p><b>人话</b>：让"错的题"变成"下次不再错"，形成提分闭环。</p>
+        <p><b>关系</b>：和"刷题"配套——只刷不回流，等于漏水的桶。</p>
+      </div>
+    </section>
+
+    <!-- 07 苏格拉底式阅读关卡 -->
+    <section id="s7">
+      <h2 class="sec"><span class="sec-id">07</span>苏格拉底式阅读关卡</h2>
+      <p>下面是互动题。每题选完点「检查」，反馈会告诉你为什么、依据在哪、错了该回哪复习。</p>
+
+      <div class="task" data-task="q1" data-answer="B"
+           data-ok="对。资料分析套路固定、提分快，是性价比之首；这是贯穿全文的核心判断。"
+           data-no="再想想。题量大不等于性价比高。性价比看的是'单位时间提分'，资料分析虽然只有约20题，但提分最快。"
+           data-src="判断2：资料分析性价比最高，目标正确率80%。"
+           data-review="回到「05 核心判断-判断2」和「06 资料分析概念」复习。">
+        <div class="q"><span class="qn">Q1</span>本文主张的"性价比最高"模块是哪一个？</div>
+        <div class="opts">
+          <button class="opt" data-val="A">A. 言语理解（题量最大）</button>
+          <button class="opt" data-val="B">B. 资料分析</button>
+          <button class="opt" data-val="C">C. 常识判断（靠积累）</button>
+          <button class="opt" data-val="D">D. 数量关系（最难）</button>
+        </div>
+        <button class="check">检查</button>
+        <div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>
+      </div>
+
+      <div class="task" data-task="q2" data-answer="C"
+           data-ok="对。120分钟/130+题，平均每题不足1分钟，做不完是常态，所以'取舍'本身就是核心能力。"
+           data-no="不完全。提示：想想题量和时间的关系。"
+           data-src="背景包4：国考约130-135题、120分钟。"
+           data-review="回到「02 背景包-4」复习。">
+        <div class="q"><span class="qn">Q2</span>行测必须学会"取舍"的根本原因是？</div>
+        <div class="opts">
+          <button class="opt" data-val="A">A. 题目太难，做不出来</button>
+          <button class="opt" data-val="B">B. 选择题可以蒙，不用做</button>
+          <button class="opt" data-val="C">C. 时间不够，130+题做不完，必须把时间投到高性价比题</button>
+          <button class="opt" data-val="D">D. 某些模块不该学</button>
+        </div>
+        <button class="check">检查</button>
+        <div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>
+      </div>
+
+      <div class="task" data-task="q3" data-answer="C"
+           data-ok="对。数量关系灵活、耗时长、得分难，目标是挑常考题型做、其余跳过，把时间让给资料分析。这是'取舍'不是'放弃'。"
+           data-no="注意区分'取舍'和'放弃整个模块'。本文没主张全放弃数量关系。"
+           data-src="判断3：数量关系学会取舍，掌握常考题型，其余果断跳过。"
+           data-review="回到「05 判断3」和「06 取舍概念」复习。">
+        <div class="q"><span class="qn">Q3</span>本文对"数量关系"的主张是？</div>
+        <div class="opts">
+          <button class="opt" data-val="A">A. 它最难，应该最先攻克</button>
+          <button class="opt" data-val="B">B. 直接全部放弃，一个都不做</button>
+          <button class="opt" data-val="C">C. 学会取舍——挑常考题型做，其余跳过</button>
+          <button class="opt" data-val="D">D. 它和资料分析一样重要，平均用力</button>
+        </div>
+        <button class="check">检查</button>
+        <div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>
+      </div>
+
+      <div class="task" data-task="q4" data-answer="A"
+           data-ok="对。coder2gwy主张先限时做真题摸底、建立benchmark，再分模块逐项攻克。这是全文策略的起点。"
+           data-no="顺序反了。先有benchmark才知道弱项在哪。"
+           data-src="判断1：先模考摸底，建立benchmark（coder2gwy）。"
+           data-review="回到「05 判断1」复习。">
+        <div class="q"><span class="qn">Q4</span>备考的第一步应该是什么？</div>
+        <div class="opts">
+          <button class="opt" data-val="A">A. 限时做一套真题摸底，建立benchmark</button>
+          <button class="opt" data-val="B">B. 直接开始背常识</button>
+          <button class="opt" data-val="C">C. 把数量关系全做完</button>
+          <button class="opt" data-val="D">D. 报个班再说</button>
+        </div>
+        <button class="check">检查</button>
+        <div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>
+      </div>
+
+      <div class="task" data-task="q5" data-answer="B"
+           data-ok="对。常识覆盖面太广，短期突击性价比最低，应靠日常积累+考前扫盲，不挤占资料分析的黄金时间。"
+           data-no="再想想。常识的特点是'广'，不是'难'或'可速成'。"
+           data-src="判断4：常识判断短期提分有限，性价比最低。"
+           data-review="回到「05 判断4」复习。">
+        <div class="q"><span class="qn">Q5</span>关于常识判断，本文的观点是？</div>
+        <div class="opts">
+          <button class="opt" data-val="A">A. 短期突击性价比最高，重点背</button>
+          <button class="opt" data-val="B">B. 短期提分有限，靠日常积累，不占资料分析的时间</button>
+          <button class="opt" data-val="C">C. 它分值最高，必须全对</button>
+          <button class="opt" data-val="D">D. 可以完全不看</button>
+        </div>
+        <button class="check">检查</button>
+        <div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>
+      </div>
+
+      <div class="task" data-task="q6" data-multi="true" data-answer="A,C"
+           data-ok="对。错题回流让'错的题'变成'下次不再错'，形成提分闭环；只刷不总结等于漏水的桶。两个都对。"
+           data-no="错题回流的本质是'总结弱点、形成闭环'。再看看哪两项符合。"
+           data-src="判断6 + 概念'错题回流'：只刷不回流等于漏水的桶。"
+           data-review="回到「05 判断6」和「06 错题回流」复习。">
+        <div class="q"><span class="qn">Q6</span>（多选）为什么"只刷题不总结"等于白刷？</div>
+        <div class="opts">
+          <button class="opt" data-val="A">A. 不归档错题，就发现不了自己的弱点模式</button>
+          <button class="opt" data-val="B">B. 题刷得不够多</button>
+          <button class="opt" data-val="C">C. 错的题没有变成"下次不再错"，没有形成提分闭环</button>
+          <button class="opt" data-val="D">D. 应该只做新题不做旧题</button>
+        </div>
+        <button class="check">检查</button>
+        <div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>
+      </div>
+
+      <div class="task" data-task="q7" data-answer="A"
+           data-ok="对。判断推理技巧性强、不依赖大量计算，适合手机碎片时间刷；而资料分析和数量关系涉及计算，小屏不便。"
+           data-no="注意：不是所有模块都适合手机刷。涉及大量计算的模块在小屏上反而低效。"
+           data-src="GloryFind经验：判断推理适合手机刷，资料分析和数量关系涉及计算时小屏不便。"
+           data-review="回到「06 判断推理概念」复习。">
+        <div class="q"><span class="qn">Q7</span>下面哪个模块最适合"手机碎片时间刷"？</div>
+        <div class="opts">
+          <button class="opt" data-val="A">A. 判断推理</button>
+          <button class="opt" data-val="B">B. 资料分析</button>
+          <button class="opt" data-val="C">C. 数量关系</button>
+          <button class="opt" data-val="D">D. 都一样</button>
+        </div>
+        <button class="check">检查</button>
+        <div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>
+      </div>
+    </section>
+
+    <!-- 08 闯关式任务 + 数据表 -->
+    <section id="s8">
+      <h2 class="sec"><span class="sec-id">08</span>闯关式任务：五大模块性价比表</h2>
+      <p>这张表是全文的"证据核心"。先读懂它，再做下面的迁移题。</p>
+      <table class="stats">
+        <thead><tr><th>模块</th><th>题量</th><th>目标正确率</th><th>定位</th></tr></thead>
+        <tbody>
+          <tr><td>常识判断</td><td>~20</td><td class="lo">60%</td><td>性价比最低，日常积累</td></tr>
+          <tr><td>言语理解</td><td>~40</td><td>75%</td><td>核心得分基本盘</td></tr>
+          <tr><td>数量关系</td><td>~15</td><td class="lo">50%</td><td>学会取舍</td></tr>
+          <tr><td>判断推理</td><td>~40</td><td>75%</td><td>技巧性最强，提分快</td></tr>
+          <tr><td>资料分析</td><td>~20</td><td class="hl">80%</td><td>性价比最高</td></tr>
+        </tbody>
+      </table>
+      <span class="src">数据综合自备考资料模块表（题量、正确率、定位均来自公开备考攻略）。题量为国考近似值，省考略有差异。</span>
+
+      <div class="task" data-task="q8" data-answer="C"
+           data-ok="对。资料分析性价比最高、提分最快，是必须稳拿的得分点，所以应该作为重点突破对象。"
+           data-no="想想'速通'二字的含义——有限时间投到哪提分最快。"
+           data-src="表：资料分析目标正确率80%、'性价比最高'。"
+           data-review="回到「08 性价比表」复习。">
+        <div class="q"><span class="qn">Q8</span>（迁移题）如果你只有 2 周备考，应该重点突破哪个模块？</div>
+        <div class="opts">
+          <button class="opt" data-val="A">A. 常识判断（靠积累）</button>
+          <button class="opt" data-val="B">B. 数量关系（最难）</button>
+          <button class="opt" data-val="C">C. 资料分析（性价比最高、提分最快）</button>
+          <button class="opt" data-val="D">D. 平均分配</button>
+        </div>
+        <button class="check">检查</button>
+        <div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>
+      </div>
+
+      <div class="task" data-task="q9" data-answer="B"
+           data-ok="对。'综合正确率约70%是上岸基本门槛'是综合各模块正确率换算得出的判断，属于判断/推论，不是单一原文原句。你能区分这一点很好。"
+           data-no="注意区分'考试客观结构（事实）'和'上岸者的经验换算（判断/推论）'。"
+           data-src="70%门槛来自备考资料的题量×正确率换算，属综合判断。"
+           data-review="回到「03 原文问题定位」复习。">
+        <div class="q"><span class="qn">Q9</span>（标注题）"综合正确率达到70%基本是上岸门槛"这句话，属于哪类信息？</div>
+        <div class="opts">
+          <button class="opt" data-val="A">A. 事实（考试公告明文规定）</button>
+          <button class="opt" data-val="B">B. 判断/推论（综合题量×正确率换算出的经验门槛）</button>
+          <button class="opt" data-val="C">C. 例子</button>
+          <button class="opt" data-val="D">D. 比喻</button>
+        </div>
+        <button class="check">检查</button>
+        <div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>
+      </div>
+    </section>
+
+    <!-- 09 误解与边界 -->
+    <section id="s9">
+      <h2 class="sec"><span class="sec-id">09</span>误解与边界</h2>
+
+      <div class="card miss">
+        <h3>误解 1："取舍"="放弃某个模块"</h3>
+        <p><b>为什么容易误解</b>：本文反复说数量关系、常识"性价比低"。</p>
+        <p><b>原文真正说了什么</b>：取舍的对象是<b>单题</b>——挑性价比低的难题跳过，而不是整模块放弃。数量关系仍要"掌握常考题型"。</p>
+        <p><b>原文没有说</b>："数量关系/常识一个都别做。"</p>
+        <p><b>如何避免</b>：记住公式——<b>取舍 = 对单题的时间分配，不是对模块的放弃</b>。</p>
+      </div>
+
+      <div class="card miss">
+        <h3>误解 2：常识靠"突击背书"能速成</h3>
+        <p><b>为什么容易误解</b>：常识看起来"背了就会"。</p>
+        <p><b>原文真正说了什么</b>：常识<b>短期提分有限、性价比最低</b>，定位是日常积累 + 考前扫盲。</p>
+        <p><b>如何避免</b>：把常识的黄金时间让给资料分析；常识只做"碎片扫盲"。</p>
+      </div>
+
+      <div class="card miss">
+        <h3>误解 3：资料分析=数量关系，都是计算该往后排</h3>
+        <p><b>为什么容易误解</b>：两者都涉及数字计算。</p>
+        <p><b>原文真正说了什么</b>：资料分析<b>套路固定、提分快</b>，是必须稳拿的得分点；数量关系灵活、耗时长。两者策略完全相反。</p>
+        <p><b>如何避免</b>：看"套路是否固定"——固定的是得分点，灵活的才需要取舍。</p>
+      </div>
+
+      <div class="card miss">
+        <h3>边界：题量与正确率是"近似值"</h3>
+        <p><b>重要边界</b>：表中的题量（如 ~20、~40）是<b>国考近似值</b>，省考、不同岗位（地市/副省/执法）会有差异。<b>不要把近似值当成精确承诺</b>。复习时应以目标岗位的近年真题为准。</p>
+      </div>
+    </section>
+
+    <!-- 10 背景知识缺口 -->
+    <section id="s10">
+      <h2 class="sec"><span class="sec-id">10</span>背景知识缺口</h2>
+      <p>要完全吃透行测速通，下面这些可以下一步补，但现在不必全补：</p>
+      <div class="card">
+        <h3>缺口 1：各模块的具体解题技巧</h3>
+        <p>本文给的是"策略层"（投到哪），没展开"战术层"（资料分析怎么速算、图推怎么看规律）。<b>下一步追问</b>：资料分析的"截位直除法/特征数字法"怎么用？</p>
+      </div>
+      <div class="card">
+        <h3>缺口 2：目标岗位的真题考情</h3>
+        <p>不同岗位题量、模块配比不同。<b>下一步追问</b>：我要考的岗位，近年行测各模块具体几题？</p>
+      </div>
+      <div class="card">
+        <h3>缺口 3：申论的配合</h3>
+        <p>行测只是笔试一半，申论（主观题）同等重要。<b>下一步追问</b>：行测和申论的复习时间怎么分配？→ 见配套的《申论速通》地图。</p>
+      </div>
+      <div class="card">
+        <h3>缺口 4：时间管理的实战节奏</h3>
+        <p>"取舍"是原则，实战中需要训练"每题用时上限"的本能。<b>下一步追问</b>：怎么训练"一题超时立刻跳"的反应？</p>
+      </div>
+    </section>
+
+    <!-- 11 复盘与学习报告 -->
+    <section id="s11">
+      <h2 class="sec"><span class="sec-id">11</span>复盘与学习报告</h2>
+      <p>做完上面所有题后，生成你的学习报告。它会汇总你的完成情况、答对数和需要复习的题。</p>
+      <div class="btn-row">
+        <button class="btn" id="genReport">📋 生成学习报告</button>
+        <button class="btn alt" id="copyReport">📋 复制报告</button>
+      </div>
+      <textarea id="report" readonly>点击「生成学习报告」后，这里会显示你的完成情况、答对题数和需要复习的题。</textarea>
+
+      <h3 style="margin-top:26px">❌ 错题回流区</h3>
+      <div class="wrong-box"><ul id="wrongBox"><li style="color:#888">还没有错题。答错的题会自动收集到这里。</li></ul></div>
+
+      <h3 style="margin-top:26px">自我复盘清单</h3>
+      <div class="card">
+        <p>• 我现在能说出五大模块的<b>性价比排序</b>了吗？<br>
+        • 我能区分哪些是考试<b>事实</b>、哪些是上岸者的<b>判断</b>了吗？<br>
+        • 我最常误解的是"取舍=放弃"还是"资料=数量"？<br>
+        • 我的薄弱模块是哪个？<b>下一步具体练什么</b>？</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ===== 自推广：浮条 + 模态框 ===== -->
+<div class="promo-fab"><button id="promoBtn">🐟 关于捞鱼</button></div>
+<div class="modal-mask" id="promoModal">
+  <div class="modal">
+    <div style="display:flex;gap:14px;align-items:center">
+      <img class="avatar" src="https://s41.ax1x.com/2025/12/05/pZmPZPH.png" alt="捞鱼" onerror="this.style.display='none'">
+      <div>
+        <span class="tag">捞鱼工作室</span>
+        <h3 style="margin:4px 0">捞鱼</h3>
+        <p style="font-size:.86rem;color:#666;margin:0">一个弱小但有梦想的开发者</p>
+      </div>
+    </div>
+    <p style="margin-top:14px;font-size:.9rem">把难啃的干货拆成有原文依据、能追问、能复述的理解地图。</p>
+    <div class="sticker-preview"><span>😺</span><span>🐟</span><span>✨</span></div>
+    <div class="qr-grid">
+      <div class="qr-cell"><div class="ph">💬</div>QQ群<br><span style="font-size:.7rem;color:#999">交流备考</span></div>
+      <div class="qr-cell"><div class="ph">❤️</div>赞赏<br><span style="font-size:.7rem;color:#999">请作者喝奶茶</span></div>
+      <div class="qr-cell"><div class="ph">🎉</div>表情包<br><span style="font-size:.7rem;color:#999">周三涵/捞鱼系列</span></div>
+    </div>
+    <a href="https://lyzbcy.github.io/about/" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:14px;background:var(--forest);color:#fff;padding:10px;border-radius:8px;text-decoration:none;font-family:var(--font-head)">了解更多 →</a>
+    <button id="closeModal" style="margin-top:10px;width:100%;background:none;border:1px solid #ccc;border-radius:8px;padding:8px;cursor:pointer">关闭</button>
+  </div>
+</div>
+
+<footer>
+  由 <a href="https://lyzbcy.github.io/" target="_blank" rel="noopener" style="color:var(--brick);text-decoration:underline;font-weight:700">捞鱼</a> 制作 · 这个工具能帮你预习难啃的干货，但不能代替完整学习。学习愉快
+</footer>
+
+<script>
+// ===== 导航栏自动生成（数据驱动，不写死模块数） =====
+var SECTIONS=[
+  {id:'s1',n:'01',t:'学习目标与阅读路径'},
+  {id:'s2',n:'02',t:'零基础背景包'},
+  {id:'s3',n:'03',t:'原文问题定位'},
+  {id:'s4',n:'04',t:'原文结构地图'},
+  {id:'s5',n:'05',t:'核心判断与依据'},
+  {id:'s6',n:'06',t:'关键概念拆解'},
+  {id:'s7',n:'07',t:'苏格拉底式阅读关卡'},
+  {id:'s8',n:'08',t:'闯关式任务·性价比表'},
+  {id:'s9',n:'09',t:'误解与边界'},
+  {id:'s10',n:'10',t:'背景知识缺口'},
+  {id:'s11',n:'11',t:'复盘与学习报告'}
+];
+(function(){
+  var nav=document.getElementById('navList');
+  SECTIONS.forEach(function(s){
+    var li=document.createElement('li');
+    li.innerHTML='<a href="#'+s.id+'"><span class="num">'+s.n+'</span>'+s.t+'</a>';
+    nav.appendChild(li);
+  });
+})();
+
+// ===== 模态框 =====
+document.getElementById('promoBtn').onclick=function(){document.getElementById('promoModal').classList.add('open');};
+document.getElementById('closeModal').onclick=function(){document.getElementById('promoModal').classList.remove('open');};
+document.getElementById('promoModal').onclick=function(e){if(e.target===this)this.classList.remove('open');};
+</script>
+
+<!-- ===== 固定互动引擎（原样粘贴，勿改逻辑） ===== -->
+<script>
+(function(){
+  "use strict";
+  function $all(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+  function selectedVals(t){return $all('.opt.selected',t).map(function(o){return o.getAttribute('data-val');}).sort();}
+  function setFb(t,state,html){var fb=t.querySelector('.feedback');if(!fb)return;fb.className='feedback'+(state?(' '+state):'');fb.innerHTML=html;}
+  function updateBar(){
+    var all=$all('.task'),done=$all('.task[data-answered="1"]');
+    var fill=document.getElementById('barFill'),num=document.getElementById('barNum');
+    if(fill)fill.style.width=all.length?(done.length/all.length*100)+'%':'0%';
+    if(num)num.textContent=done.length+' / '+all.length;
+  }
+  function renderWrong(){
+    var box=document.getElementById('wrongBox');if(!box)return;
+    var wrong=$all('.task[data-answered="1"][data-correct="0"]');
+    if(!wrong.length){box.innerHTML='<li style="color:#888">还没有错题。答错的题会自动收集到这里。</li>';return;}
+    box.innerHTML='';
+    wrong.forEach(function(t){var li=document.createElement('li');li.textContent='【'+(t.getAttribute('data-task')||'')+'】'+(t.getAttribute('data-review')||'回到对应模块复习');box.appendChild(li);});
+  }
+  function check(t){
+    var type=t.getAttribute('data-type'),ok=false;
+    if(type==='selects'){
+      var sels=$all('select.match',t),allok=true,empty=false;
+      sels.forEach(function(s){if(!s.value)empty=true;if(s.value!==s.getAttribute('data-correct'))allok=false;});
+      if(empty){setFb(t,'no','请先把每一项都选好再检查。');return;}
+      ok=allok;
+    }else{
+      var sel=selectedVals(t);
+      if(!sel.length){setFb(t,'no','请先选择一个选项再检查。');return;}
+      var ans=(t.getAttribute('data-answer')||'').split(',').map(function(x){return x.trim();}).sort();
+      ok=(sel.join('|')===ans.join('|'));
+    }
+    var body=ok?(t.getAttribute('data-ok')||'回答正确。'):(t.getAttribute('data-no')||'再想想。');
+    var src=t.getAttribute('data-src');
+    setFb(t,ok?'ok':'no',(ok?'✅ ':'❌ ')+body+(src?('<span class="src">'+src+'</span>'):''));
+    t.setAttribute('data-answered','1');t.setAttribute('data-correct',ok?'1':'0');
+    updateBar();renderWrong();
+  }
+  function genReport(){
+    var box=document.getElementById('report');if(!box)return;
+    var all=$all('.task'),done=$all('.task[data-answered="1"]'),right=$all('.task[data-answered="1"][data-correct="1"]');
+    var lines=['=== 行测速通 学习报告 ===','完成题目：'+done.length+' / '+all.length,'答对：'+right.length+' 题',''];
+    var wrong=$all('.task[data-answered="1"][data-correct="0"]');
+    if(wrong.length){lines.push('我答错的题（建议复习）：');wrong.forEach(function(t){lines.push('- '+(t.getAttribute('data-task')||'')+'：'+(t.getAttribute('data-review')||''));});}
+    else{lines.push('暂无错题，状态很好！');}
+    lines.push('','下一步追问：我的薄弱模块是哪个？具体练什么？');
+    box.textContent=lines.join('\n');
+  }
+  document.addEventListener('click',function(e){
+    var c=e.target.closest?e.target:null;
+    var opt=c&&e.target.closest('.opt');
+    if(opt){var t=opt.closest('.task');if(!t)return;
+      if(t.getAttribute('data-multi')==='true'){opt.classList.toggle('selected');}
+      else{$all('.opt',t).forEach(function(o){o.classList.remove('selected');});opt.classList.add('selected');}
+      return;}
+    var btn=c&&e.target.closest('.check');
+    if(btn){var tk=btn.closest('.task');if(tk)check(tk);return;}
+    if(e.target&&e.target.id==='genReport'){genReport();return;}
+    if(e.target&&e.target.id==='copyReport'){var r=document.getElementById('report');if(r&&navigator.clipboard)navigator.clipboard.writeText(r.textContent);return;}
+  });
+  function init(){updateBar();renderWrong();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+</body>
+</html>

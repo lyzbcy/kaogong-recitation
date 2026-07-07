@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>申论速通 - 理解地图</title>
+<style>
+:root{
+  --cream:#FAF6EB; --paper:#F3EDDD; --forest:#1E3A24; --sky:#BCD8EE;
+  --sage:#AFCDA8; --ink:#1A2018; --marker:#F5E08A; --brick:#B5482A;
+  --correct:#2F7D46; --wrong:#B5482A;
+  --font-display:"Archivo Black","Noto Sans SC","PingFang SC",sans-serif;
+  --font-head:"Poppins","Noto Sans SC","PingFang SC",sans-serif;
+  --font-body:-apple-system,"PingFang SC","Noto Sans SC",sans-serif;
+  --font-mono:"Roboto Mono","JetBrains Mono",monospace;
+  --radius-pill:999px; --radius-card:14px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--font-body);line-height:1.7;font-size:16px}
+a{color:var(--brick)}
+.layout{display:grid;grid-template-columns:270px 1fr;max-width:1180px;margin:0 auto;gap:0}
+.sidebar{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;background:var(--forest);color:#EAF3E0;padding:22px 18px}
+.sidebar h1{font-family:var(--font-display);font-size:1.35rem;line-height:1.25;margin:0 0 4px;color:#fff}
+.sidebar .sub{font-size:.78rem;color:#AFCDA8;margin-bottom:18px}
+.progress-wrap{background:rgba(255,255,255,.12);border-radius:var(--radius-pill);height:14px;overflow:hidden;margin-bottom:6px}
+#barFill{height:100%;width:0;background:var(--marker);transition:width .3s}
+.bar-row{display:flex;justify-content:space-between;font-size:.8rem;color:#D6E7C8;margin-bottom:18px}
+.nav{list-style:none;padding:0;margin:0}
+.nav li{margin:2px 0}
+.nav a{display:block;color:#D6E7C8;text-decoration:none;font-size:.86rem;padding:7px 10px;border-radius:8px;transition:.15s}
+.nav a:hover{background:rgba(255,255,255,.1);color:#fff}
+.nav a .num{display:inline-block;width:26px;color:var(--marker);font-family:var(--font-mono);font-size:.78rem}
+.side-foot{margin-top:18px;font-size:.72rem;color:#8FAE84;line-height:1.5}
+.main{padding:30px 34px 80px;max-width:820px}
+section{margin-bottom:42px;scroll-margin-top:20px}
+h2.sec{font-family:var(--font-head);font-size:1.45rem;color:var(--forest);border-left:6px solid var(--brick);padding-left:12px;margin:0 0 18px}
+.sec-id{display:inline-block;background:var(--forest);color:var(--marker);font-family:var(--font-mono);font-size:.78rem;padding:2px 8px;border-radius:6px;margin-right:8px}
+h3{font-size:1.1rem;color:var(--forest);margin:0 0 8px}
+p{margin:0 0 12px}
+.card{background:var(--paper);border-radius:var(--radius-card);padding:18px 20px;margin-bottom:14px;border:1px solid #E4DAC0}
+.card.goal{border-left:5px solid var(--sage)}
+.card.bg{border-left:5px solid var(--sky)}
+.card.judge{border-left:5px solid var(--marker)}
+.card.concept{border-left:5px solid var(--forest)}
+.card.miss{border-left:5px solid var(--brick)}
+.label{display:inline-block;font-size:.72rem;font-family:var(--font-mono);padding:2px 8px;border-radius:5px;margin-right:6px;vertical-align:middle}
+.label.fact{background:var(--sage);color:var(--forest)}
+.label.judge{background:var(--marker);color:var(--ink)}
+.label.infer{background:var(--sky);color:var(--ink)}
+.label.eg{background:var(--brick);color:#fff}
+.src{display:block;background:#E8E0C8;border-radius:6px;padding:6px 10px;font-size:.82rem;color:#5a5040;margin-top:8px;font-family:var(--font-mono)}
+.src::before{content:"📎 原文依据："}
+.note-bg{background:#FBF3D0;border:1px dashed #D4B85A;border-radius:6px;padding:8px 12px;font-size:.88rem;margin:8px 0}
+.note-bg b{color:var(--brick)}
+.map-node{background:var(--paper);border:2px solid var(--forest);border-radius:10px;padding:12px 16px;margin-bottom:0;position:relative}
+.map-row{display:flex;flex-direction:column;gap:0}
+.map-rel{font-size:.78rem;color:var(--brick);font-family:var(--font-mono);padding:4px 0 4px 14px}
+table.stats{width:100%;border-collapse:collapse;font-size:.88rem;background:#fff;border-radius:8px;overflow:hidden}
+table.stats th,table.stats td{border:1px solid #E0D6B8;padding:8px 10px;text-align:left}
+table.stats th{background:var(--forest);color:#fff;font-family:var(--font-head);font-weight:600}
+table.stats td.hl{background:#F0F7E8;font-weight:700;color:var(--correct)}
+table.stats td.lo{background:#FBEDE6;color:var(--brick)}
+.task{background:#fff;border:1px solid #D9CFAE;border-radius:var(--radius-card);padding:16px 18px;margin-bottom:16px}
+.task .q{font-weight:600;margin-bottom:10px}
+.task .q .qn{color:var(--brick);font-family:var(--font-mono);margin-right:6px}
+.opts{display:flex;flex-direction:column;gap:7px;margin-bottom:10px}
+.opt{text-align:left;background:var(--paper);border:1px solid #D9CFAE;border-radius:8px;padding:9px 12px;cursor:pointer;font-size:.92rem;font-family:var(--font-body);transition:.12s}
+.opt:hover{background:#EFE7CF}
+.opt.selected{background:var(--sky);border-color:var(--forest);font-weight:600}
+.check{background:var(--forest);color:#fff;border:none;border-radius:8px;padding:8px 20px;cursor:pointer;font-family:var(--font-head);font-size:.9rem}
+.check:hover{background:#2a4f33}
+.feedback{margin-top:10px;padding:9px 12px;border-radius:8px;font-size:.88rem;background:#F0EAD6;min-height:20px}
+.feedback.ok{background:#E2F0E0;color:var(--correct)}
+.feedback.no{background:#FBEDE6;color:var(--wrong)}
+.feedback .src{background:rgba(0,0,0,.05);margin-top:6px}
+.wrong-box{background:var(--paper);border-radius:10px;padding:14px 16px}
+.wrong-box ul{margin:6px 0 0;padding-left:18px}
+#report{width:100%;min-height:120px;background:#fff;border:1px solid #D9CFAE;border-radius:8px;padding:10px;font-family:var(--font-mono);font-size:.82rem;white-space:pre-wrap}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.btn{background:var(--brick);color:#fff;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-family:var(--font-head);font-size:.86rem}
+.btn.alt{background:var(--forest)}
+.promo-fab{position:fixed;right:18px;bottom:18px;z-index:999}
+.promo-fab button{background:var(--brick);color:#fff;border:none;border-radius:var(--radius-pill);padding:11px 18px;cursor:pointer;font-family:var(--font-head);font-size:.86rem;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.modal-mask{display:none;position:fixed;inset:0;background:rgba(20,30,18,.55);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal-mask.open{display:flex}
+.modal{background:var(--cream);border-radius:16px;max-width:460px;width:100%;padding:24px;max-height:88vh;overflow-y:auto}
+.modal h3{margin-bottom:6px}
+.modal .avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--sage)}
+.modal .tag{display:inline-block;background:var(--sage);color:var(--forest);font-size:.72rem;padding:2px 8px;border-radius:5px}
+.qr-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px}
+.qr-cell{background:var(--paper);border-radius:10px;padding:12px 8px;text-align:center;font-size:.78rem}
+.qr-cell .ph{width:100%;aspect-ratio:1;background:#fff;border:1px dashed #C9BD9A;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;font-size:1.2rem}
+.sticker-preview{display:flex;gap:6px;justify-content:center;margin-bottom:6px}
+.sticker-preview span{font-size:1.3rem}
+footer{text-align:center;padding:30px 20px;font-size:.84rem;color:#6b6048;border-top:1px solid #E0D6B8;margin-top:40px}
+footer a{font-weight:700}
+@media(max-width:820px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{position:static;height:auto}
+  .nav{display:flex;flex-wrap:wrap;gap:4px}
+  .nav li{margin:0}
+  .main{padding:20px 16px 60px}
+  .qr-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <h1>申论速通</h1>
+    <div class="sub">申论 · 理解地图</div>
+    <div class="progress-wrap"><div id="barFill"></div></div>
+    <div class="bar-row"><span>任务进度</span><span id="barNum">0 / 0</span></div>
+    <ul class="nav" id="navList"></ul>
+    <div class="side-foot">
+      保真 &gt; 结构清楚 &gt; 理解友好。<br>
+      每个判断都标了出处。
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- 01 -->
+    <section id="s1">
+      <h2 class="sec"><span class="sec-id">01</span>学习目标与阅读路径</h2>
+      <p>这一份要解决一个问题：<b>申论到底在考什么、五大题型各该怎么破，才能不靠"文采"也能拿分</b>。</p>
+      <p>读完你应该能做到下面这些（都是可检查的动作，不是口号）：</p>
+      <div class="card goal"><b>目标 1</b>：能说出申论考查的<b>五大能力</b>，并把它们和<b>五大题型</b>一一对应。</div>
+      <div class="card goal"><b>目标 2</b>：能复述<b>归纳概括题</b>的标准三步法（回到材料找要点 → 大白话转申论语言 → 分条整理），并指出它的出处。</div>
+      <div class="card goal"><b>目标 3</b>：能区分"事实 / 判断 / 推论 / 例子"——哪些是考试的能力规定，哪些是培训机构的解题套路。</div>
+      <div class="card goal"><b>目标 4</b>：能指出至少 3 个申论常见误区（如脱离材料、抄原文照搬、大作文堆辞藻），并说出正确做法。</div>
+      <div class="card goal"><b>目标 5</b>：能为自己的薄弱题型提出 1 个具体的下一步训练方向。</div>
+    </section>
+
+    <!-- 02 -->
+    <section id="s2">
+      <h2 class="sec"><span class="sec-id">02</span>零基础背景包</h2>
+      <p>正式拆解前，先补 5 个读懂本文必须知道的概念。这些是<span class="label fact">背景补充</span>，不是任何人的主张。</p>
+
+      <div class="card bg">
+        <h3>1. 申论是什么</h3>
+        <p>申论是公务员笔试的<b>主观题</b>科目——给你几千字的"给定材料"，围绕它<b>手写作答</b>。它和行测（客观选择题）相对。</p>
+        <span class="note-bg"><b>背景补充</b>：申论考的是"机关工作能力"的模拟，不是考文学创作或时政记忆。</span>
+      </div>
+      <div class="card bg">
+        <h3>2. 给定材料</h3>
+        <p>每道申论题都依附于一段或几段<b>官方风格的材料</b>（案例、数据、政策表述）。<b>几乎所有小题的答案要点都来自材料</b>，这是申论最重要的特征。</p>
+      </div>
+      <div class="card bg">
+        <h3>3. 五大题型</h3>
+        <p>申论题型相对固定：<b>归纳概括、综合分析、提出对策、贯彻执行（公文写作）、申发论述（大作文）</b>。下文一切方法都围绕这 5 类展开。</p>
+      </div>
+      <div class="card bg">
+        <h3>4. "采分点"</h3>
+        <p>申论是<b>按点给分</b>（阅卷人对照"标准要点"找你答到了几条），不是按感觉给分。<b>多答准 1-2 个要点，可能就多拿 5 分+</b>。</p>
+      </div>
+      <div class="card bg">
+        <h3>5. 立意</h3>
+        <p>大作文的"<b>立意</b>"指文章的核心观点/主旨。<b>立意准不准，基本决定大作文的档次</b>——立意偏了，文笔再好也分低。</p>
+      </div>
+    </section>
+
+    <!-- 03 -->
+    <section id="s3">
+      <h2 class="sec"><span class="sec-id">03</span>原文问题定位</h2>
+      <p>这份"速通"地图综合了华图、中公、AI智考等公开备考资料与高校备考讲义。它表面在讲"申论怎么复习"，深层其实在回答<b>一个问题</b>：</p>
+      <div class="card judge">
+        <p style="font-size:1.08rem;font-weight:600">"申论既不考文采也不考时政记忆，那它到底考什么能力？面对五大题型，有没有不依赖天赋、能训练的通用破题路径？"</p>
+        <span class="src">综合华图《申论答题技巧》、中公网校题型分析、AI智考备考攻略、高校申论备考讲义。</span>
+      </div>
+      <p>如果只记一个问题，就记上面这个。<b>申论速通的核心，是把"玄学写作"还原成"从材料里精准提要点 + 按规范结构输出"</b>——这是贯穿全文的主线。</p>
+    </section>
+
+    <!-- 04 -->
+    <section id="s4">
+      <h2 class="sec"><span class="sec-id">04</span>原文结构地图</h2>
+      <p>这份攻略的结构类型是<b>「主题簇 + 程序流程」混合型</b>：五大题型是并列主题簇，每个题型内部又是固定流程。主线是"材料→要点→规范输出"。</p>
+
+      <div class="map-row">
+        <div class="map-node"><b>起点：申论考的是"材料整理能力"，不考文采</b><br><span style="font-size:.85rem;color:#666">核心前提 → 答案在材料里</span></div>
+        <div class="map-rel">↓ 能力规定（事实）</div>
+        <div class="map-node"><b>五大能力：归纳概括 / 提出对策 / 综合分析 / 贯彻执行 / 文字表达</b></div>
+        <div class="map-rel">↓ 对应五大题型（并列主题簇）</div>
+        <div class="map-node"><b>主题簇1：归纳概括 = 找要点 → 转申论语言 → 分条</b><br>
+        <b>主题簇2：综合分析 = 亮观点 → 多角度分析 → 得结论</b><br>
+        <b>主题簇3：提出对策 = 直接对策 + 问题反推 + 经验借鉴</b><br>
+        <b>主题簇4：贯彻执行 = 判文种 → 定格式与重点 → 规范用语</b><br>
+        <b>主题簇5：大作文 = 立意 → 分论点 → 论证</b></div>
+        <div class="map-rel">↓ 公共原则</div>
+        <div class="map-node"><b>公共原则：材料为王、按点给分、规范结构</b></div>
+        <div class="map-rel">↓ 风险：常见误读</div>
+        <div class="map-node"><b>风险：脱离材料自由发挥 / 抄原文照搬 / 大作文堆辞藻 / 忽视格式</b></div>
+      </div>
+      <span class="src">题型流程综合自：归纳概括（高校讲义）、综合分析（华图）、提出对策（中公）、公文（人事考试网）、大作文（AI智考/华图）。</span>
+    </section>
+
+    <!-- 05 -->
+    <section id="s5">
+      <h2 class="sec"><span class="sec-id">05</span>核心判断与依据</h2>
+      <p>下面 6 个核心判断都有出处。<span class="label fact">事实</span>=考试能力规定；<span class="label judge">判断</span>=培训机构的解题主张；<span class="label infer">推论</span>=从前者推出的方法。</p>
+
+      <div class="card judge">
+        <h3>判断 1：申论本质考的是"材料整理能力"</h3>
+        <p><span class="label fact">事实</span>申论考试<b>实质是对考生材料整理能力的检验</b>——几乎一切答案的根都在给定材料里。</p>
+        <span class="src">川观新闻《申论答题要点全覆盖技巧》："申论考试实质是对考生材料整理能力的检验。"</span>
+      </div>
+
+      <div class="card judge">
+        <h3>判断 2：归纳概括题有三步固定流程</h3>
+        <p><span class="label judge">判断</span>归纳概括是所有题型的基础，标准做法：<b>①回到材料找要点 → ②把"大白话"翻译成申论语言 → ③分条整理</b>。</p>
+        <span class="src">高校申论备考讲义："直接在材料中找答案，准确划出符合问题的部分，将'大白话'翻译成申论语言，最后整理要点。"</span>
+      </div>
+
+      <div class="card judge">
+        <h3>判断 3：综合分析"亮观点→多角度→得结论"</h3>
+        <p><span class="label judge">判断</span>综合分析题要<b>先亮明观点，再从原因/影响/合理性等多角度分析，最后得出结论或对策</b>，不能只罗列现象。</p>
+        <span class="src">华图/备考资料：综合分析"亮明观点 → 多角度分析（原因/影响/合理性）→ 得出结论/对策"。</span>
+      </div>
+
+      <div class="card judge">
+        <h3>判断 4：提出对策有三条来源</h3>
+        <p><span class="label judge">判断</span>对策不是凭空想，有三条来源：<b>①材料直接给出的对策 + ②由问题反推对策 + ③借鉴材料中的经验/案例</b>。</p>
+        <span class="src">备考资料：提出对策"材料直接对策 + 问题反推对策 + 经验借鉴"。</span>
+      </div>
+
+      <div class="card judge">
+        <h3>判断 5：公文写作先判"文种"再定内容</h3>
+        <p><span class="label judge">判断</span>贯彻执行（公文）题<b>根据文种确定写作内容重点</b>——不同文种（通知/倡议书/讲话稿/汇报…）有不同特点，先判断文种，就能确定核心写作方向。</p>
+        <span class="src">全国人事考试网《公文备考技巧》："根据文种确定写作内容重点，不同文种有不同特点，部分文种可直接判断核心内容写作方向。"</span>
+      </div>
+
+      <div class="card judge">
+        <h3>判断 6：大作文"立意决定档次"</h3>
+        <p><span class="label infer">推论</span>大作文<b>立意准确（抓准主旨）是第一位的</b>，其次是分论点有力、逻辑严密、论证充分。<b>小题多答准 1-2 个要点，整体可提高 5 分+</b>。</p>
+        <span class="src">国考考情分析（PDF）："作文选取更好的分论点，小题多答准1-2个要点，可提高5分+。"</span>
+      </div>
+    </section>
+
+    <!-- 06 -->
+    <section id="s6">
+      <h2 class="sec"><span class="sec-id">06</span>关键概念拆解</h2>
+
+      <div class="card concept">
+        <h3>材料整理能力（核心概念）</h3>
+        <p><b>定义</b>：从几千字给定材料里<b>提取、归纳、概括特定信息</b>的能力。</p>
+        <p><b>人话</b>：给你一堆材料，你能把"对题目有用的部分"挑出来、理顺、说清楚。</p>
+        <p><b>关系</b>：它是申论所有题型的<b>共同地基</b>——综合分析、对策、公文、大作文，本质都在"整理材料"。</p>
+        <p><b>不要误解成</b>："整理 = 抄原文。"整理要求转化和重组，照抄往往不得分。</p>
+      </div>
+
+      <div class="card concept">
+        <h3>归纳概括</h3>
+        <p><b>定义</b>：五大题型中最基础的一种，要求概括材料中的问题/原因/对策/特点等。</p>
+        <p><b>人话</b>：申论的"地基题"，其他题型都是它的变体加难。</p>
+        <p><b>关系</b>：它是综合分析、提出对策的基础——概括不准，后面的分析和对策就立不住。</p>
+        <p><b>不要误解成</b>："概括 = 字越少越好。"概括要全（采分点不漏），不是要短。</p>
+      </div>
+
+      <div class="card concept">
+        <h3>申论语言（vs 大白话）</h3>
+        <p><b>定义</b>：机关公文式的规范、凝练、客观表述，区别于口语化的"大白话"。</p>
+        <p><b>例子</b>：大白话"政府要多花钱搞教育" → 申论语言"加大教育财政投入"。</p>
+        <p><b>关系</b>：归纳概括第二步"翻译"，就是要把材料里的口语表述转成申论语言。</p>
+        <p><b>不要误解成</b>："申论语言 = 堆砌华丽辞藻。"它要的是规范准确，不是文采。</p>
+      </div>
+
+      <div class="card concept">
+        <h3>立意（大作文核心）</h3>
+        <p><b>定义</b>：大作文的核心观点/主旨，通常要紧扣材料和题目要求提炼。</p>
+        <p><b>人话</b>：你这篇文章到底想论证一个什么中心论点。</p>
+        <p><b>关系</b>：立意准 → 文章进入高档；立意偏 → 文笔再好也低分。<b>它和"文采"是两回事</b>。</p>
+        <p><b>不要误解成</b>："立意 = 自己想写什么就写什么。"立意必须从材料和题目里来。</p>
+      </div>
+
+      <div class="card concept">
+        <h3>文种（公文写作）</h3>
+        <p><b>定义</b>：公文的种类，如通知、倡议书、讲话稿、汇报材料、公开信等。</p>
+        <p><b>人话</b>：让你写的这个东西"是什么体裁"，决定它的格式和重点。</p>
+        <p><b>关系</b>：判断文种是公文题的<b>第一步</b>——文种错了，格式和语气全错。</p>
+        <p><b>不要误解成</b>："所有公文格式都一样。"不同文种的称谓、落款、语气差别很大。</p>
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section id="s7">
+      <h2 class="sec"><span class="sec-id">07</span>苏格拉底式阅读关卡</h2>
+      <p>下面是互动题。每题选完点「检查」，反馈会告诉你为什么、依据在哪、错了该回哪复习。</p>
+
+      <div class="task" data-task="q1" data-answer="B"
+           data-ok="对。申论本质考的是材料整理能力，几乎所有小题的答案要点都在给定材料里。这是贯穿全文的核心前提。"
+           data-no="再想想。申论的根在哪？"
+           data-src="判断1：申论实质是对考生材料整理能力的检验（川观新闻）。"
+           data-review="回到「05 判断1」和「06 材料整理能力」复习。">
+        <div class="q"><span class="qn">Q1</span>申论小题的答案要点，根本上来自哪里？</div>
+        <div class="opts">
+          <button class="opt" data-val="A">A. 自己的时政记忆</button>
+          <button class="opt" data-val="B">B. 给定材料</button>
+          <button class="opt" data-val="C">C. 考前的范文背诵</button>
+          <button class="opt" data-val="D">D. 临场发挥的文采</button>
+        </div>
+        <button class="check">检查</button>
+        <div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>
+      </div>
+
+      <div class="task" data-task="q2" data-answer="B"
+           data-ok="对。归纳概括三步法：找要点→转申论语言→分条整理。这是所有题型的基础流程。"
+           data-no="顺序或环节不对。提示：先从材料里找，再做语言的转化。"
+           data-src="判断2：归纳概括题三步法（高校备考讲义）。"
+           data-review="回到「05 判断2」和「06 归纳概括」复习。">
+        <div class="q"><span class="qn">Q2</span>归纳概括题的标准三步法，正确顺序是？</div>
+        <div class="opts">
+          <button class="opt" data-val="A">A. 分条整理 → 找要点 → 转语言</button>
+          <button class="opt" data-val="B">B. 回到材料找要点 → 大白话转申论语言 → 分条整理</button>
+          <button class="opt" data-val="C">C. 背范文 → 套模板 → 写出来</button>
+          <button class="opt" data-val="D">D. 先写大作文再概括</button>
+        </div>
+        <button class="check">检查</button>
+        <div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>
+      </div>
+
+      <div class="task" data-task="q3" data-answer="C"
+           data-ok="对。提出对策有三条来源：材料直接对策+问题反推对策+经验借鉴。不能脱离材料凭空想。"
+           data-no="对策不是凭空发挥的。想想它可以从哪三个地方来。"
+           data-src="判断4：提出对策'材料直接对策+问题反推对策+经验借鉴'。"
+           data-review="回到「05 判断4」复习。">
+        <div class="q"><span class="qn">Q3</span>"提出对策题"的对策来源不包括以下哪个？</div>
+        <div class="opts">
+          <button class="opt" data-val="A">A. 材料直接给出的对策</button>
+          <button class="opt" data-val="B">B. 由问题反推出的对策</button>
+          <button class="opt" data-val="C">C. 自己脑补的、材料里没有的想法</button>
+          <button class="opt" data-val="D">D. 借鉴材料中的经验/案例</button>
+        </div>
+        <button class="check">检查</button>
+        <div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>
+      </div>
+
+      <div class="task" data-task="q4" data-answer="A"
+           data-ok="对。贯彻执行（公文）题第一步是判断文种，文种决定格式和内容重点。文种错了全盘皆错。"
+           data-no="公文题的第一步是什么？想想格式从哪来。"
+           data-src="判断5：根据文种确定写作内容重点（人事考试网）。"
+           data-review="回到「05 判断5」和「06 文种」复习。">
+        <div class="q"><span class="qn">Q4</span>公文写作（贯彻执行）题的第一步应该是？</div>
+        <div class="opts">
+          <button class="opt" data-val="A">A. 判断文种，确定格式和内容重点</button>
+          <button class="opt" data-val="B">B. 直接开始写正文</button>
+          <button class="opt" data-val="C">C. 背一段通用开头</button>
+          <button class="opt" data-val="D">D. 先算字数</button>
+        </div>
+        <button class="check">检查</button>
+        <div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>
+      </div>
+
+      <div class="task" data-task="q5" data-answer="A"
+           data-ok="对。大作文立意准确是第一位的，立意偏了文笔再好也低分。立意和文采是两回事。"
+           data-no="想想大作文最决定档次的是什么。是辞藻还是观点？"
+           data-src="判断6：立意准确（抓主旨）是大作文第一位；国考考情分析。"
+           data-review="回到「05 判断6」和「06 立意」复习。">
+        <div class="q"><span class="qn">Q5</span>大作文最决定分数档次的是？</div>
+        <div class="opts">
+          <button class="opt" data-val="A">A. 立意是否准确（是否抓准主旨）</button>
+          <button class="opt" data-val="B">B. 辞藻是否华丽</button>
+          <button class="opt" data-val="C">C. 字数是否够</button>
+          <button class="opt" data-val="D">D. 字写得是否好看</button>
+        </div>
+        <button class="check">检查</button>
+        <div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>
+      </div>
+
+      <div class="task" data-task="q6" data-answer="B"
+           data-ok="对。申论语言要的是规范、凝练、准确，不是华丽辞藻。堆辞藻恰恰是常见误区。"
+           data-no="申论语言和文学语言的追求正好相反。"
+           data-src="概念'申论语言'：规范凝练客观，不是堆砌华丽辞藻。"
+           data-review="回到「06 申论语言」复习。">
+        <div class="q"><span class="qn">Q6</span>把大白话"政府要多花钱搞教育"转成申论语言，最合适的是？</div>
+        <div class="opts">
+          <button class="opt" data-val="A">A. 政府当倾尽全力，洋洋洒洒兴办教育之大业</button>
+          <button class="opt" data-val="B">B. 加大教育财政投入</button>
+          <button class="opt" data-val="C">C. 教育很重要，政府要重视</button>
+          <button class="opt" data-val="D">D. 多给学校打钱</button>
+        </div>
+        <button class="check">检查</button>
+        <div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>
+      </div>
+
+      <div class="task" data-task="q7" data-multi="true" data-answer="A,C"
+           data-ok="对。申论按点给分，多答准要点能多拿分；小题多答准1-2个要点整体可提高5分+。两个都正确。"
+           data-no="申论的给分机制是'按点'，想想这对答题策略意味着什么。"
+           data-src="背景包4 + 判断6：按点给分；小题多答准要点可提高5分+。"
+           data-review="回到「02 背景包-4」和「05 判断6」复习。">
+        <div class="q"><span class="qn">Q7</span>（多选）申论"按点给分"的机制，对答题策略意味着？</div>
+        <div class="opts">
+          <button class="opt" data-val="A">A. 小题要尽量多找全要点，宁全勿漏</button>
+          <button class="opt" data-val="B">B. 字写得好看最重要</button>
+          <button class="opt" data-val="C">C. 多答准1-2个要点可能就多拿5分+</button>
+          <button class="opt" data-val="D">D. 答案越短越好</button>
+        </div>
+        <button class="check">检查</button>
+        <div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>
+      </div>
+    </section>
+
+    <!-- 08 -->
+    <section id="s8">
+      <h2 class="sec"><span class="sec-id">08</span>闯关式任务：五大题型对照表</h2>
+      <p>这张表把五大能力、五大题型、破题路径一一对应。先读懂它，再做下面的题。</p>
+      <table class="stats">
+        <thead><tr><th>五大能力</th><th>对应题型</th><th>破题路径</th></tr></thead>
+        <tbody>
+          <tr><td>归纳概括能力</td><td>归纳概括</td><td>找要点→转申论语言→分条</td></tr>
+          <tr><td>综合分析能力</td><td>综合分析</td><td>亮观点→多角度分析→得结论</td></tr>
+          <tr><td>提出对策能力</td><td>提出对策</td><td>直接对策+问题反推+经验借鉴</td></tr>
+          <tr><td>贯彻执行能力</td><td>贯彻执行（公文）</td><td>判文种→定格式重点→规范用语</td></tr>
+          <tr><td>文字表达能力</td><td class="hl">申发论述（大作文）</td><td>立意→分论点→论证</td></tr>
+        </tbody>
+      </table>
+      <span class="src">能力规定综合自国考考情分析（PDF）五大能力；破题路径综合自华图/中公/人事考试网/高校讲义。</span>
+
+      <div class="task" data-task="q8" data-type="selects"
+           data-ok="对。能力与题型一一对应：归纳概括能力→归纳概括题，综合分析能力→综合分析题，文字表达能力→大作文。"
+           data-no="再对照表格看看每项能力对应哪种题型。"
+           data-src="对照表 + 国考考情分析五大能力规定。"
+           data-review="回到「08 五大题型对照表」复习。">
+        <div class="q"><span class="qn">Q8</span>（匹配题）把"能力"和它对应的"题型"配对：</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin:8px 0">
+          <div>① 归纳概括能力 → <select class="match" data-correct="A"><option value="">请选择</option><option value="A">归纳概括题</option><option value="B">综合分析题</option><option value="C">大作文</option></select></div>
+          <div>② 综合分析能力 → <select class="match" data-correct="B"><option value="">请选择</option><option value="A">归纳概括题</option><option value="B">综合分析题</option><option value="C">大作文</option></select></div>
+          <div>③ 文字表达能力 → <select class="match" data-correct="C"><option value="">请选择</option><option value="A">归纳概括题</option><option value="B">综合分析题</option><option value="C">大作文</option></select></div>
+        </div>
+        <button class="check">检查</button>
+        <div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>
+      </div>
+
+      <div class="task" data-task="q9" data-answer="B"
+           data-ok="对。脱离材料自由发挥是申论最致命的误区——申论考的是材料整理能力，答案必须扎根材料。"
+           data-no="申论的答案从哪来？脱离了它就丢了根本。"
+           data-src="判断1 + 误解1：申论考材料整理能力；脱离材料是致命误区。"
+           data-review="回到「05 判断1」和「09 误解1」复习。">
+        <div class="q"><span class="qn">Q9</span>（纠错题）下面哪种做法是申论最该避免的？</div>
+        <div class="opts">
+          <button class="opt" data-val="A">A. 归纳概括时分条整理要点</button>
+          <button class="opt" data-val="B">B. 觉得材料没深度，抛开材料自由发挥观点</button>
+          <button class="opt" data-val="C">C. 公文题先判断文种再写</button>
+          <button class="opt" data-val="D">D. 大作文先抓准立意</button>
+        </div>
+        <button class="check">检查</button>
+        <div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>
+      </div>
+    </section>
+
+    <!-- 09 -->
+    <section id="s9">
+      <h2 class="sec"><span class="sec-id">09</span>误解与边界</h2>
+
+      <div class="card miss">
+        <h3>误解 1：申论考文采 / 时政记忆</h3>
+        <p><b>为什么容易误解</b>：它是"写作题"，很多人以为拼文笔或拼背诵。</p>
+        <p><b>原文真正说了什么</b>：申论<b>实质考材料整理能力</b>，答案在材料里。</p>
+        <p><b>原文没有说</b>："文笔好/时政背得多就能拿高分。"</p>
+        <p><b>如何避免</b>：每道题先问"材料里有什么要点"，而不是"我能写出什么漂亮话"。</p>
+      </div>
+
+      <div class="card miss">
+        <h3>误解 2：归纳概括 = 抄原文照搬</h3>
+        <p><b>为什么容易误解</b>："答案在材料里"被简化成"抄材料"。</p>
+        <p><b>原文真正说了什么</b>：要<b>转化和重组</b>——把大白话翻译成申论语言、分条整理，不是原样照抄。</p>
+        <p><b>如何避免</b>：照抄往往不得分；要"提炼+转化+重组"。</p>
+      </div>
+
+      <div class="card miss">
+        <h3>误解 3：大作文堆辞藻就能高分</h3>
+        <p><b>为什么容易误解</b>：以为作文=文学创作。</p>
+        <p><b>原文真正说了什么</b>：<b>立意准确是第一位</b>，辞藻是次要的。立意偏了，文笔再好也低分。</p>
+        <p><b>如何避免</b>：先确保立意从材料和题目里来，再谈论证和语言。</p>
+      </div>
+
+      <div class="card miss">
+        <h3>误解 4：公文题不重视格式</h3>
+        <p><b>为什么容易误解</b>：把公文当普通作文写。</p>
+        <p><b>原文真正说了什么</b>：公文<b>根据文种确定内容重点和格式</b>，文种不同，称谓/落款/语气/重点全不同。</p>
+        <p><b>如何避免</b>：动笔前先判文种，按该文种的规范格式写。</p>
+      </div>
+
+      <div class="card miss">
+        <h3>边界：题型配比与分值因考试而异</h3>
+        <p><b>重要边界</b>：五大题型是<b>常见分类</b>，但具体每次考哪几题、各占多少分，<b>国考/省考/不同级别（副省/地市/执法）差异很大</b>。<b>不要把"五大题型"当成每次必考五题的承诺</b>。以目标岗位真题为准。</p>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section id="s10">
+      <h2 class="sec"><span class="sec-id">10</span>背景知识缺口</h2>
+      <p>要完全吃透申论速通，下面这些可以下一步补，但现在不必全补：</p>
+      <div class="card">
+        <h3>缺口 1：各类公文的具体格式</h3>
+        <p>本文给了"判文种"的原则，没展开每种文种（通知/倡议书/讲话稿/汇报…）的具体格式模板。<b>下一步追问</b>：倡议书和通知的格式差异在哪？</p>
+      </div>
+      <div class="card">
+        <h3>缺口 2：大作文的论据素材库</h3>
+        <p>立意和结构可训练，但有力的论据需要平时积累（政策表述、典型案例、名言）。<b>下一步追问</b>：怎么建一个"申论论据素材库"？</p>
+      </div>
+      <div class="card">
+        <h3>缺口 3：与行测的时间分配</h3>
+        <p>申论和行测是笔试两半。<b>下一步追问</b>：复习时间怎么在行测、申论之间分？→ 见配套《行测速通》地图。</p>
+      </div>
+      <div class="card">
+        <h3>缺口 4：实战限时训练</h3>
+        <p>方法是原则，实战要在<b>限时、限字数</b>下稳定输出。<b>下一步追问</b>：怎么训练 150 分钟内稳定写完一套申论？</p>
+      </div>
+    </section>
+
+    <!-- 11 -->
+    <section id="s11">
+      <h2 class="sec"><span class="sec-id">11</span>复盘与学习报告</h2>
+      <p>做完上面所有题后，生成你的学习报告。它会汇总你的完成情况、答对数和需要复习的题。</p>
+      <div class="btn-row">
+        <button class="btn" id="genReport">📋 生成学习报告</button>
+        <button class="btn alt" id="copyReport">📋 复制报告</button>
+      </div>
+      <textarea id="report" readonly>点击「生成学习报告」后，这里会显示你的完成情况、答对题数和需要复习的题。</textarea>
+
+      <h3 style="margin-top:26px">❌ 错题回流区</h3>
+      <div class="wrong-box"><ul id="wrongBox"><li style="color:#888">还没有错题。答错的题会自动收集到这里。</li></ul></div>
+
+      <h3 style="margin-top:26px">自我复盘清单</h3>
+      <div class="card">
+        <p>• 我现在能说出<b>五大能力↔五大题型</b>的对应了吗？<br>
+        • 我能区分申论考的是<b>材料整理</b>而不是文采了吗？<br>
+        • 我最常踩的坑是"脱离材料"还是"堆辞藻"？<br>
+        • 我的薄弱题型是哪个？<b>下一步具体练什么</b>？</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="promo-fab"><button id="promoBtn">🐟 关于捞鱼</button></div>
+<div class="modal-mask" id="promoModal">
+  <div class="modal">
+    <div style="display:flex;gap:14px;align-items:center">
+      <img class="avatar" src="https://s41.ax1x.com/2025/12/05/pZmPZPH.png" alt="捞鱼" onerror="this.style.display='none'">
+      <div>
+        <span class="tag">捞鱼工作室</span>
+        <h3 style="margin:4px 0">捞鱼</h3>
+        <p style="font-size:.86rem;color:#666;margin:0">一个弱小但有梦想的开发者</p>
+      </div>
+    </div>
+    <p style="margin-top:14px;font-size:.9rem">把难啃的干货拆成有原文依据、能追问、能复述的理解地图。</p>
+    <div class="sticker-preview"><span>😺</span><span>🐟</span><span>✨</span></div>
+    <div class="qr-grid">
+      <div class="qr-cell"><div class="ph">💬</div>QQ群<br><span style="font-size:.7rem;color:#999">交流备考</span></div>
+      <div class="qr-cell"><div class="ph">❤️</div>赞赏<br><span style="font-size:.7rem;color:#999">请作者喝奶茶</span></div>
+      <div class="qr-cell"><div class="ph">🎉</div>表情包<br><span style="font-size:.7rem;color:#999">周三涵/捞鱼系列</span></div>
+    </div>
+    <a href="https://lyzbcy.github.io/about/" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:14px;background:var(--forest);color:#fff;padding:10px;border-radius:8px;text-decoration:none;font-family:var(--font-head)">了解更多 →</a>
+    <button id="closeModal" style="margin-top:10px;width:100%;background:none;border:1px solid #ccc;border-radius:8px;padding:8px;cursor:pointer">关闭</button>
+  </div>
+</div>
+
+<footer>
+  由 <a href="https://lyzbcy.github.io/" target="_blank" rel="noopener" style="color:var(--brick);text-decoration:underline;font-weight:700">捞鱼</a> 制作 · 这个工具能帮你预习难啃的干货，但不能代替完整学习。学习愉快
+</footer>
+
+<script>
+var SECTIONS=[
+  {id:'s1',n:'01',t:'学习目标与阅读路径'},
+  {id:'s2',n:'02',t:'零基础背景包'},
+  {id:'s3',n:'03',t:'原文问题定位'},
+  {id:'s4',n:'04',t:'原文结构地图'},
+  {id:'s5',n:'05',t:'核心判断与依据'},
+  {id:'s6',n:'06',t:'关键概念拆解'},
+  {id:'s7',n:'07',t:'苏格拉底式阅读关卡'},
+  {id:'s8',n:'08',t:'闯关式任务·题型对照表'},
+  {id:'s9',n:'09',t:'误解与边界'},
+  {id:'s10',n:'10',t:'背景知识缺口'},
+  {id:'s11',n:'11',t:'复盘与学习报告'}
+];
+(function(){
+  var nav=document.getElementById('navList');
+  SECTIONS.forEach(function(s){
+    var li=document.createElement('li');
+    li.innerHTML='<a href="#'+s.id+'"><span class="num">'+s.n+'</span>'+s.t+'</a>';
+    nav.appendChild(li);
+  });
+})();
+document.getElementById('promoBtn').onclick=function(){document.getElementById('promoModal').classList.add('open');};
+document.getElementById('closeModal').onclick=function(){document.getElementById('promoModal').classList.remove('open');};
+document.getElementById('promoModal').onclick=function(e){if(e.target===this)this.classList.remove('open');};
+</script>
+
+<!-- ===== 固定互动引擎（原样粘贴，勿改逻辑） ===== -->
+<script>
+(function(){
+  "use strict";
+  function $all(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+  function selectedVals(t){return $all('.opt.selected',t).map(function(o){return o.getAttribute('data-val');}).sort();}
+  function setFb(t,state,html){var fb=t.querySelector('.feedback');if(!fb)return;fb.className='feedback'+(state?(' '+state):'');fb.innerHTML=html;}
+  function updateBar(){
+    var all=$all('.task'),done=$all('.task[data-answered="1"]');
+    var fill=document.getElementById('barFill'),num=document.getElementById('barNum');
+    if(fill)fill.style.width=all.length?(done.length/all.length*100)+'%':'0%';
+    if(num)num.textContent=done.length+' / '+all.length;
+  }
+  function renderWrong(){
+    var box=document.getElementById('wrongBox');if(!box)return;
+    var wrong=$all('.task[data-answered="1"][data-correct="0"]');
+    if(!wrong.length){box.innerHTML='<li style="color:#888">还没有错题。答错的题会自动收集到这里。</li>';return;}
+    box.innerHTML='';
+    wrong.forEach(function(t){var li=document.createElement('li');li.textContent='【'+(t.getAttribute('data-task')||'')+'】'+(t.getAttribute('data-review')||'回到对应模块复习');box.appendChild(li);});
+  }
+  function check(t){
+    var type=t.getAttribute('data-type'),ok=false;
+    if(type==='selects'){
+      var sels=$all('select.match',t),allok=true,empty=false;
+      sels.forEach(function(s){if(!s.value)empty=true;if(s.value!==s.getAttribute('data-correct'))allok=false;});
+      if(empty){setFb(t,'no','请先把每一项都选好再检查。');return;}
+      ok=allok;
+    }else{
+      var sel=selectedVals(t);
+      if(!sel.length){setFb(t,'no','请先选择一个选项再检查。');return;}
+      var ans=(t.getAttribute('data-answer')||'').split(',').map(function(x){return x.trim();}).sort();
+      ok=(sel.join('|')===ans.join('|'));
+    }
+    var body=ok?(t.getAttribute('data-ok')||'回答正确。'):(t.getAttribute('data-no')||'再想想。');
+    var src=t.getAttribute('data-src');
+    setFb(t,ok?'ok':'no',(ok?'✅ ':'❌ ')+body+(src?('<span class="src">'+src+'</span>'):''));
+    t.setAttribute('data-answered','1');t.setAttribute('data-correct',ok?'1':'0');
+    updateBar();renderWrong();
+  }
+  function genReport(){
+    var box=document.getElementById('report');if(!box)return;
+    var all=$all('.task'),done=$all('.task[data-answered="1"]'),right=$all('.task[data-answered="1"][data-correct="1"]');
+    var lines=['=== 申论速通 学习报告 ===','完成题目：'+done.length+' / '+all.length,'答对：'+right.length+' 题',''];
+    var wrong=$all('.task[data-answered="1"][data-correct="0"]');
+    if(wrong.length){lines.push('我答错的题（建议复习）：');wrong.forEach(function(t){lines.push('- '+(t.getAttribute('data-task')||'')+'：'+(t.getAttribute('data-review')||''));});}
+    else{lines.push('暂无错题，状态很好！');}
+    lines.push('','下一步追问：我的薄弱题型是哪个？具体练什么？');
+    box.textContent=lines.join('\n');
+  }
+  document.addEventListener('click',function(e){
+    var c=e.target.closest?e.target:null;
+    var opt=c&&e.target.closest('.opt');
+    if(opt){var t=opt.closest('.task');if(!t)return;
+      if(t.getAttribute('data-multi')==='true'){opt.classList.toggle('selected');}
+      else{$all('.opt',t).forEach(function(o){o.classList.remove('selected');});opt.classList.add('selected');}
+      return;}
+    var btn=c&&e.target.closest('.check');
+    if(btn){var tk=btn.closest('.task');if(tk)check(tk);return;}
+    if(e.target&&e.target.id==='genReport'){genReport();return;}
+    if(e.target&&e.target.id==='copyReport'){var r=document.getElementById('report');if(r&&navigator.clipboard)navigator.clipboard.writeText(r.textContent);return;}
+  });
+  function init(){updateBar();renderWrong();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+</body>
+</html>

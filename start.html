@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1E3A24">
+<title>考公速通 · 星星布丁的学习站</title>
+<style>
+:root{
+  --cream:#FAF6EB; --paper:#F3EDDD; --forest:#1E3A24; --sky:#BCD8EE;
+  --sage:#AFCDA8; --ink:#1A2018; --marker:#F5E08A; --brick:#B5482A;
+  --font-display:"Archivo Black","Noto Sans SC","PingFang SC",sans-serif;
+  --font-head:"Poppins","Noto Sans SC","PingFang SC",sans-serif;
+  --font-body:-apple-system,"PingFang SC","Noto Sans SC",sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--font-body);line-height:1.75;min-height:100vh;display:flex;flex-direction:column}
+.wrap{max-width:760px;margin:0 auto;padding:36px 22px;flex:1;width:100%}
+.hero{text-align:center;margin-bottom:34px}
+.hero .logo{font-size:3rem;line-height:1;margin-bottom:8px}
+.hero h1{font-family:var(--font-display);font-size:1.9rem;color:var(--forest);margin:6px 0;letter-spacing:.5px}
+.hero .sub{color:#7a7058;font-size:.96rem;margin:0}
+.hero .who{color:var(--brick);font-size:.84rem;margin-top:6px}
+.cards{display:flex;flex-direction:column;gap:16px}
+.card{display:block;text-decoration:none;color:inherit;background:var(--paper);border-radius:16px;padding:22px 22px;border:1px solid #E4DAC0;transition:.15s;position:relative;overflow:hidden}
+.card:active{transform:scale(.99)}
+.card.locked{border-left:6px solid var(--brick)}
+.card.open{border-left:6px solid var(--sage)}
+.card .tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;padding:2px 8px;border-radius:5px;margin-bottom:8px}
+.card.locked .tag{background:var(--brick);color:#fff}
+.card.open .tag{background:var(--sage);color:var(--forest)}
+.card h2{font-family:var(--font-head);font-size:1.2rem;color:var(--forest);margin:0 0 6px}
+.card p{margin:0;font-size:.9rem;color:#5a5040}
+.card .arrow{position:absolute;right:20px;top:50%;transform:translateY(-50%);font-size:1.4rem;color:var(--forest)}
+.hint{margin-top:18px;background:#FBF3D0;border:1px dashed #D4B85A;border-radius:10px;padding:12px 14px;font-size:.84rem;color:#6b6048}
+.hint b{color:var(--brick)}
+footer{text-align:center;padding:24px 16px;font-size:.8rem;color:#6b6048;border-top:1px solid #E0D6B8}
+footer a{font-weight:700;color:var(--brick)}
+@media(min-width:640px){
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .card.full{grid-column:1/-1}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="logo">🪐</div>
+    <h1>考公速通学习站</h1>
+    <p class="sub">行测 · 申论 · 政治理论背诵</p>
+    <p class="who">为星星布丁准备的专属学习电台</p>
+  </div>
+
+  <div class="cards">
+    <a class="card locked full" href="index.html">
+      <span class="tag">🔒 加密电台</span>
+      <h2>政治理论 · 磨耳朵电台</h2>
+      <p>4 篇 / 123 节 / 约 2.3 小时朗读。后台连播 + 锁屏控制 + 背诵自测。</p>
+      <p style="margin-top:6px;color:var(--brick);font-size:.84rem">🔑 需密码进入 · 语音磨耳朵</p>
+      <span class="arrow">→</span>
+    </a>
+    <a class="card open" href="xingce-map.html">
+      <span class="tag">📖 理解地图</span>
+      <h2>行测速通</h2>
+      <p>五大模块性价比 + 9 道互动题</p>
+      <span class="arrow">→</span>
+    </a>
+    <a class="card open" href="shenlun-map.html">
+      <span class="tag">📖 理解地图</span>
+      <h2>申论速通</h2>
+      <p>五大题型对照 + 9 道互动题</p>
+      <span class="arrow">→</span>
+    </a>
+  </div>
+
+  <div class="hint">
+    🔒 <b>政治理论电台</b>是加密的，输入答案即可进入（提示：这是给谁准备的呀？）。<br>
+    📖 <b>行测/申论理解地图</b>是公开的学习地图，可直接打开。
+  </div>
+</div>
+<footer>
+  由 <a href="https://lyzbcy.github.io/" target="_blank" rel="noopener">捞鱼</a> 制作 · 资料仅用于个人学习
+</footer>
+</body>
+</html>
