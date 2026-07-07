@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1E3A24">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>政治理论背诵 · 磨耳朵</title>
+<title>政治理论背诵 · 磨耳朵电台</title>
 <style>
 :root{
   --cream:#FAF6EB; --paper:#F3EDDD; --forest:#1E3A24; --sky:#BCD8EE;
@@ -18,765 +18,739 @@
   --font-mono:"Roboto Mono","JetBrains Mono",monospace;
   --radius-pill:999px; --radius-card:14px;
   --safe-bottom:env(safe-area-inset-bottom,0px);
-  --player-h:64px;
+  --sidebar-w:280px;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--font-body);line-height:1.75;font-size:16px;padding-bottom:calc(var(--player-h) + var(--safe-bottom) + 12px)}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--font-body);line-height:1.75;font-size:16px}
 a{color:var(--brick)}
 
-/* ===== 密码门（未解密前唯一可见） ===== */
-#gate{position:fixed;inset:0;z-index:9999;background:var(--forest);color:#EAF3E0;display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
+/* ============ 密码门（未解密前唯一可见，F12 也看不到正文） ============ */
+#gate{position:fixed;inset:0;z-index:100000;background:linear-gradient(160deg,#1E3A24,#0f1f12);color:#EAF3E0;display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
 #gate.unlocked{display:none}
-.gate-box{max-width:380px;width:100%;text-align:center;padding:8px}
-.gate-box .logo{font-size:2.6rem;line-height:1;margin-bottom:8px}
-.gate-box h1{font-family:var(--font-display);font-size:1.5rem;margin:6px 0 4px;color:#fff;letter-spacing:.5px}
-.gate-box .who{color:var(--marker);font-size:.9rem;margin-bottom:24px}
-.gate-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:22px 20px;backdrop-filter:none}
-.gate-hint{font-size:.86rem;color:#AFCDA8;margin-bottom:6px}
+.gate-box{max-width:400px;width:100%;text-align:center;padding:8px}
+.gate-box .logo{font-size:2.8rem;line-height:1;margin-bottom:10px}
+.gate-box h1{font-family:var(--font-display);font-size:1.6rem;margin:6px 0 4px;color:#fff;letter-spacing:.5px}
+.gate-box .who{color:var(--marker);font-size:.92rem;margin-bottom:26px}
+.gate-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:24px 22px}
+.gate-hint{font-size:.86rem;color:#AFCDA8;margin-bottom:8px}
 .gate-hint b{color:var(--marker)}
-.gate-q{font-size:.95rem;color:#fff;margin-bottom:14px}
-#pwdInput{width:100%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:10px;color:#fff;padding:13px 14px;font-size:1rem;font-family:var(--font-body);text-align:center;outline:none;transition:.15s}
+.gate-q{font-size:1rem;color:#fff;margin-bottom:16px;font-weight:600}
+#pwdInput{width:100%;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.25);border-radius:12px;color:#fff;padding:14px;font-size:1rem;font-family:var(--font-body);text-align:center;outline:none;transition:.15s}
 #pwdInput::placeholder{color:rgba(255,255,255,.4)}
 #pwdInput:focus{border-color:var(--marker);background:rgba(255,255,255,.18)}
-#unlockBtn{width:100%;margin-top:12px;background:var(--marker);color:var(--forest);border:none;border-radius:10px;padding:13px;font-family:var(--font-head);font-size:1rem;font-weight:700;cursor:pointer;transition:.15s}
+#unlockBtn{width:100%;margin-top:14px;background:var(--marker);color:var(--forest);border:none;border-radius:12px;padding:14px;font-family:var(--font-head);font-size:1rem;font-weight:700;cursor:pointer;transition:.15s}
 #unlockBtn:active{transform:scale(.98)}
 #unlockBtn:disabled{opacity:.5}
-#gateErr{margin-top:10px;font-size:.84rem;color:#FFB39E;min-height:18px}
-.gate-foot{margin-top:18px;font-size:.72rem;color:#6F8C66;line-height:1.6}
-/* 解密后把内容区显示 */
+#gateErr{margin-top:12px;font-size:.86rem;color:#FFB39E;min-height:20px}
+.gate-foot{margin-top:20px;font-size:.74rem;color:#6F8C66;line-height:1.7}
+
+/* 解密前内容区不渲染（连 DOM 都不构建，防止 F12 偷看） */
 #app{display:none}
 #app.shown{display:block}
 
-/* ===== 顶部栏 ===== */
-.topbar{position:sticky;top:0;z-index:50;background:var(--forest);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-.topbar .menu-btn{background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:4px 8px;line-height:1;border-radius:6px}
-.topbar .menu-btn:active{background:rgba(255,255,255,.15)}
-.topbar .title{font-family:var(--font-head);font-size:1.02rem;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.topbar .stats{font-size:.74rem;color:var(--marker);font-family:var(--font-mono);white-space:nowrap}
-
-/* ===== 侧边导航（桌面固定 / 手机抽屉） ===== */
-.sidenav{position:fixed;top:0;left:0;width:300px;max-width:85vw;height:100vh;background:var(--forest);color:#EAF3E0;z-index:200;overflow-y:auto;transform:translateX(-100%);transition:transform .25s ease;padding:18px 0 var(--player-h)}
-.sidenav.open{transform:translateX(0);box-shadow:4px 0 24px rgba(0,0,0,.3)}
-.sidenav .nav-head{padding:6px 18px 12px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:8px}
-.sidenav .nav-head h2{font-family:var(--font-display);font-size:1.1rem;margin:0;color:#fff}
-.sidenav .nav-head p{font-size:.74rem;color:#AFCDA8;margin:4px 0 0}
-.nav-item{display:block;padding:8px 18px;color:#D6E7C8;text-decoration:none;font-size:.88rem;border-left:3px solid transparent;transition:.12s;cursor:pointer}
-.nav-item:hover,.nav-item:active{background:rgba(255,255,255,.08);color:#fff}
-.nav-item.lvl1{font-family:var(--font-head);font-weight:600;color:var(--marker);margin-top:10px;font-size:.92rem;border-left:none;padding-top:12px}
-.nav-item.lvl2{padding-left:24px;font-size:.86rem;border-left:none}
-.nav-item.lvl3{padding-left:40px;font-size:.82rem}
-.nav-item.active{background:rgba(245,224,138,.15);color:#fff;border-left-color:var(--marker)}
-.nav-close{display:none}
-.mask{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150}
-.mask.show{display:block}
-
-/* ===== 主内容区 ===== */
-.main{max-width:780px;margin:0 auto;padding:18px 18px 30px}
-.reader-h1{font-family:var(--font-display);font-size:1.5rem;color:var(--forest);margin:8px 0 4px;line-height:1.3}
-.reader-sub{color:#7a7058;font-size:.84rem;margin-bottom:6px;font-family:var(--font-mono)}
-.reader-sub b{color:var(--brick)}
-.sec-title{font-family:var(--font-head);font-size:1.2rem;color:var(--forest);border-left:5px solid var(--brick);padding-left:10px;margin:26px 0 12px;scroll-margin-top:64px}
-.chapter-card{background:var(--paper);border-radius:var(--radius-card);padding:18px 20px;margin-bottom:16px;border:1px solid #E4DAC0}
-.chapter-card.current{border:2px solid var(--forest);box-shadow:0 0 0 3px var(--sage)}
-.cc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
-.cc-head h3{font-size:1.05rem;color:var(--forest);margin:0;flex:1}
-.cc-actions{display:flex;gap:6px;flex-shrink:0}
-.mini-btn{background:var(--forest);color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:.78rem;cursor:pointer;font-family:var(--font-head);white-space:nowrap}
-.mini-btn:active{transform:scale(.95)}
-.mini-btn.play{background:var(--brick)}
-.mini-btn.alt{background:var(--sage);color:var(--forest)}
-
-/* 正文段落：保留挖空 */
-.body-text{font-size:1rem;line-height:1.9;color:var(--ink)}
-.body-text p{margin:0 0 10px}
-.body-text .blank{display:inline-block;min-width:48px;border-bottom:2px solid var(--brick);background:rgba(181,72,42,.08);padding:0 6px;margin:0 2px;color:transparent;font-weight:600}
-.body-text .blank::selection{background:transparent}
-.body-text .blank-reveal{color:var(--brick);background:rgba(245,224,138,.4)}
-.body-text .ezhi{background:#FBF3D0;border-left:3px solid var(--marker);padding:6px 10px;border-radius:0 6px 6px 0;font-size:.92rem;display:block;margin:6px 0}
-.body-text .ezhi b{color:var(--brick)}
-/* 标题级文本行 */
-.body-text .ln{display:block}
-.tool-row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
-.tool-btn{background:var(--paper);border:1px solid #D9CFAE;border-radius:8px;padding:7px 12px;font-size:.82rem;cursor:pointer;font-family:var(--font-body);color:var(--forest)}
-.tool-btn:active{transform:scale(.96)}
-.tool-btn.on{background:var(--marker);border-color:var(--forest)}
-
-/* 闯关题 */
-.quiz-wrap{margin-top:12px;border-top:1px dashed #C9BD9A;padding-top:12px}
-.quiz-tag{display:inline-block;background:var(--brick);color:#fff;font-size:.72rem;padding:2px 8px;border-radius:5px;font-family:var(--font-mono);margin-bottom:8px}
-.task{background:#fff;border:1px solid #D9CFAE;border-radius:var(--radius-card);padding:14px 16px;margin-bottom:12px}
-.task .q{font-weight:600;margin-bottom:10px;font-size:.96rem}
-.task .q .qn{color:var(--brick);font-family:var(--font-mono);margin-right:6px}
-.opts{display:flex;flex-direction:column;gap:7px;margin-bottom:10px}
-.opt{text-align:left;background:var(--paper);border:1px solid #D9CFAE;border-radius:8px;padding:10px 12px;cursor:pointer;font-size:.92rem;font-family:var(--font-body);transition:.1s}
-.opt:active{background:#EFE7CF}
-.opt.selected{background:var(--sky);border-color:var(--forest);font-weight:600}
-.check{background:var(--forest);color:#fff;border:none;border-radius:8px;padding:9px 18px;cursor:pointer;font-family:var(--font-head);font-size:.88rem}
-.check:active{transform:scale(.97)}
-.feedback{margin-top:10px;padding:9px 12px;border-radius:8px;font-size:.86rem;background:#F0EAD6;min-height:18px;line-height:1.6}
-.feedback.ok{background:#E2F0E0;color:var(--correct)}
-.feedback.no{background:#FBEDE6;color:var(--wrong)}
-
-/* 章内导航 */
-.chap-nav{display:flex;justify-content:space-between;gap:10px;margin:24px 0 10px}
-.chap-nav button{flex:1;background:var(--paper);border:1px solid #D9CFAE;border-radius:10px;padding:12px;cursor:pointer;font-family:var(--font-head);color:var(--forest);font-size:.88rem;text-align:left}
-.chap-nav button:active{transform:scale(.98)}
-.chap-nav button:disabled{opacity:.4}
-.chap-nav .nx{text-align:right}
-
-/* ===== 底部播放器（移动端核心） ===== */
-.player{position:fixed;left:0;right:0;bottom:0;height:calc(var(--player-h) + var(--safe-bottom));padding-bottom:var(--safe-bottom);background:var(--forest);color:#fff;z-index:100;display:none;align-items:center;gap:8px;padding-left:12px;padding-right:12px;box-shadow:0 -2px 12px rgba(0,0,0,.18)}
-.player.show{display:flex}
-.p-btn{background:rgba(255,255,255,.12);border:none;color:#fff;width:42px;height:42px;border-radius:50%;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1}
-.p-btn:active{transform:scale(.92)}
-.p-btn.main{background:var(--marker);color:var(--forest);width:46px;height:46px;font-size:1.2rem}
-.p-btn:disabled{opacity:.35}
-.p-info{flex:1;min-width:0;text-align:left;line-height:1.25}
-.p-info .p-now{font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.p-info .p-sub{font-size:.7rem;color:var(--marker);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.p-rate{background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:8px;padding:7px 9px;font-size:.74rem;font-family:var(--font-mono);cursor:pointer;flex-shrink:0}
-
-/* 浮条推广 */
-.promo-fab{position:fixed;right:14px;bottom:calc(var(--player-h) + var(--safe-bottom) + 14px);z-index:90}
-.promo-fab button{background:var(--brick);color:#fff;border:none;border-radius:var(--radius-pill);padding:9px 14px;cursor:pointer;font-family:var(--font-head);font-size:.8rem;box-shadow:0 2px 8px rgba(0,0,0,.2)}
-.modal-mask{display:none;position:fixed;inset:0;background:rgba(20,30,18,.55);z-index:1000;align-items:center;justify-content:center;padding:18px}
-.modal-mask.open{display:flex}
-.modal{background:var(--cream);border-radius:16px;max-width:420px;width:100%;padding:22px;max-height:88vh;overflow-y:auto}
-.modal h3{margin-bottom:6px;color:var(--forest)}
-.modal .tag{display:inline-block;background:var(--sage);color:var(--forest);font-size:.72rem;padding:2px 8px;border-radius:5px}
-.modal p{font-size:.9rem}
-.qr-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
-.qr-cell{background:var(--paper);border-radius:10px;padding:10px 6px;text-align:center;font-size:.76rem}
-.qr-cell .ph{width:100%;aspect-ratio:1;background:#fff;border:1px dashed #C9BD9A;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:5px;font-size:1.1rem}
-
-footer{text-align:center;padding:20px 16px;font-size:.8rem;color:#6b6048;border-top:1px solid #E0D6B8;margin-top:24px}
-footer a{font-weight:700}
-
-/* 桌面端：侧边栏常驻 */
-@media(min-width:900px){
-  body{padding-left:300px;padding-bottom:calc(var(--player-h) + var(--safe-bottom) + 12px)}
-  .sidenav{transform:translateX(0);box-shadow:none}
-  .menu-btn{display:none}
-  .mask{display:none !important}
-  .nav-close{display:none}
-  .topbar{left:300px}
-  .main{padding:22px 30px 30px}
-  .promo-fab{bottom:calc(var(--player-h) + var(--safe-bottom) + 18px);right:24px}
+/* ============ 布局骨架：左侧栏 + 右侧单列 ============ */
+.layout{display:flex;min-height:100vh}
+.sidebar{
+  position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);
+  background:var(--forest);color:#E8F0E2;overflow-y:auto;
+  padding:22px 18px 40px;z-index:50;
 }
-@media(max-width:899px){
-  .nav-close{display:block;text-align:right;padding:0 18px 8px}
-  .nav-close button{background:none;border:none;color:#fff;font-size:1.6rem;cursor:pointer;line-height:1}
+.sidebar .brand{font-family:var(--font-display);font-size:1.15rem;color:#fff;line-height:1.3;margin-bottom:4px}
+.sidebar .brand-sub{font-size:.76rem;color:var(--marker);margin-bottom:18px}
+.sidebar .stat-line{font-size:.78rem;color:#AFCDA8;margin-bottom:16px;padding:8px 10px;background:rgba(255,255,255,.06);border-radius:8px}
+.sidebar .stat-line b{color:var(--marker)}
+.nav-group{margin-bottom:14px}
+.nav-group .gp{font-family:var(--font-head);font-size:.78rem;color:var(--marker);letter-spacing:.05em;margin:10px 0 4px;padding-left:2px}
+.nav-group .gc{font-size:.82rem;color:#CFE0C5;margin:6px 0 2px;padding-left:2px}
+.nav-item{display:flex;align-items:center;gap:6px;padding:7px 10px;margin:2px 0;border-radius:8px;cursor:pointer;font-size:.84rem;color:#D6E6CC;transition:.12s;text-decoration:none;line-height:1.35}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:var(--marker);color:var(--forest);font-weight:600}
+.nav-item .ni-no{font-family:var(--font-mono);font-size:.72rem;opacity:.7;min-width:22px}
+.nav-item.active .ni-no{opacity:1}
+.main{margin-left:var(--sidebar-w);flex:1;min-width:0;padding:0;max-width:880px}
+
+/* 移动端：侧边栏收起为顶部抽屉 */
+.sidebar-toggle{display:none;position:fixed;top:12px;left:12px;z-index:60;background:var(--forest);color:#fff;border:none;border-radius:10px;width:42px;height:42px;font-size:1.2rem;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:45}
+@media(max-width:860px){
+  :root{--sidebar-w:260px}
+  .sidebar{transform:translateX(-100%);transition:transform .3s ease;padding-top:60px}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0;padding-top:56px}
+  .sidebar-toggle{display:flex;align-items:center;justify-content:center}
+  .backdrop.show{display:block}
 }
-/* 大屏阅读舒适度 */
-@media(min-width:1100px){
-  .main{max-width:820px}
+
+/* ============ 主区内容样式 ============ */
+.main-inner{padding:32px 28px 120px;max-width:780px;margin:0 auto}
+@media(max-width:600px){.main-inner{padding:20px 16px 140px}}
+
+.hero{margin-bottom:28px;padding-bottom:20px;border-bottom:2px dashed var(--sage)}
+.hero h1{font-family:var(--font-display);font-size:1.8rem;color:var(--forest);margin:0 0 8px;line-height:1.25}
+.hero .lead{font-size:.95rem;color:#5a6a52}
+@media(max-width:600px){.hero h1{font-size:1.5rem}}
+
+.sec{margin-bottom:34px;scroll-margin-top:20px}
+.sec-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;cursor:pointer}
+.sec-head h2{font-family:var(--font-head);font-size:1.2rem;color:var(--forest);margin:0}
+.sec-head .voice-btn{margin-left:auto}
+.sec-no{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;background:var(--forest);color:var(--cream);border-radius:50%;font-family:var(--font-mono);font-size:.86rem;font-weight:700;flex-shrink:0}
+.block{margin-bottom:14px}
+.b-h2{font-family:var(--font-head);font-size:1rem;color:var(--brick);margin:14px 0 6px;font-weight:700;padding-left:10px;border-left:4px solid var(--brick)}
+.b-body{background:var(--paper);border-radius:10px;padding:12px 14px;margin:6px 0;font-size:.94rem;line-height:1.85}
+.b-body .blank{display:inline-block;min-width:50px;border-bottom:2px solid var(--brick);color:var(--brick);font-weight:600;text-align:center;margin:0 2px}
+.b-body .err{display:block;background:#fff6e8;border-left:3px solid var(--brick);padding:6px 10px;margin:6px 0;border-radius:4px;font-size:.88rem;color:#7a3a1a}
+.tbl-item{background:var(--paper);border-radius:10px;padding:12px 14px;margin:8px 0}
+.tbl-item .lbl{display:inline-block;background:var(--sage);color:var(--forest);font-size:.78rem;font-weight:700;padding:2px 10px;border-radius:var(--radius-pill);margin-bottom:6px}
+.tbl-item .txt{font-size:.94rem;line-height:1.85}
+
+/* 章节标题旁「听这章」按钮 */
+.voice-btn{display:inline-block;vertical-align:middle;padding:.3em .9em;border:1px solid var(--forest);border-radius:var(--radius-pill);background:var(--cream);color:var(--forest);font:600 .8rem/1.2 var(--font-body);cursor:pointer;transition:background .15s}
+.voice-btn:hover{background:var(--sage)}
+.voice-btn.active{background:var(--forest);color:var(--cream)}
+
+/* ============ 右侧书签脊（不是右下圆圈） ============ */
+#voiceFab{
+  position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:9998;
+  display:flex;align-items:center;flex-direction:row;
+  background:var(--forest);color:var(--cream);border:none;cursor:pointer;
+  height:5em;padding:0 .55em;border-radius:16px 0 0 16px;
+  box-shadow:-4px 0 14px rgba(0,0,0,.18);font-family:var(--font-head);font-size:.85rem;
+  overflow:hidden;transition:width .42s cubic-bezier(.4,0,.2,1), box-shadow .3s ease;width:1.9em;
 }
+#voiceFab .fab-icon{font-size:1.15rem;writing-mode:vertical-rl;text-orientation:upright;letter-spacing:.1em;white-space:nowrap;flex-shrink:0}
+#voiceFab .fab-text{white-space:nowrap;opacity:0;margin-left:.6em;transition:opacity .28s ease .12s}
+#voiceFab:hover{width:8.6em;box-shadow:-6px 0 22px rgba(0,0,0,.25)}
+#voiceFab:hover .fab-text{opacity:1}
+#voiceFab.beat{animation:voiceBeat 1.6s ease-in-out infinite}
+@keyframes voiceBeat{0%,100%{box-shadow:-4px 0 14px rgba(0,0,0,.18)}50%{box-shadow:-4px 0 20px rgba(181,72,42,.5)}}
+
+/* ============ 圆润玩具风播放器 ============ */
+#voicePlayer{
+  position:fixed;left:50%;bottom:1rem;transform:translateX(-50%) translateY(140%);
+  width:min(92vw,380px);padding:1rem 1.1rem 1.1rem;background:var(--cream);
+  border:2px solid var(--forest);border-radius:26px;
+  box-shadow:0 8px 28px rgba(0,0,0,.16);z-index:9999;transition:transform .28s ease;
+  text-align:center;font-family:var(--font-body);
+}
+#voicePlayer.show{transform:translateX(-50%) translateY(0)}
+#voicePlayer .vp-head{font-size:.75rem;color:var(--forest);opacity:.8;letter-spacing:.05em}
+#voicePlayer .vp-title{font:700 1rem/1.35 var(--font-body);color:var(--ink);margin:.25rem 0 .7rem;padding:0 .2rem;word-break:break-word}
+#voicePlayer .vp-play{width:3.6rem;height:3.6rem;border:none;border-radius:50%;background:var(--forest);color:var(--cream);font-size:1.3rem;cursor:pointer;margin:0 auto .7rem;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 #142710;transition:transform .1s, box-shadow .1s}
+#voicePlayer .vp-play:active{transform:translateY(2px);box-shadow:0 1px 0 #142710}
+#voicePlayer .vp-prev,#voicePlayer .vp-next{width:2.3rem;height:2.3rem;border:1.5px solid var(--forest);border-radius:50%;background:var(--cream);color:var(--forest);font-size:.9rem;cursor:pointer}
+#voicePlayer .vp-controls{display:flex;align-items:center;justify-content:center;gap:1.2rem;margin-bottom:.7rem}
+#voicePlayer .vp-seek{width:100%;margin:.2rem 0;cursor:pointer;accent-color:var(--forest)}
+#voicePlayer .vp-time{display:flex;justify-content:space-between;font:600 .72rem/1 var(--font-mono);color:var(--ink);opacity:.75}
+#voicePlayer .vp-close{position:absolute;top:.5rem;right:.6rem;width:1.5rem;height:1.5rem;border:none;background:transparent;color:var(--ink);font-size:1rem;cursor:pointer;opacity:.5}
+#voicePlayer .vp-sub{min-height:2.6em;max-height:3.9em;overflow:hidden;font:.85rem/1.5 var(--font-body);color:var(--ink);opacity:.55;margin:.2rem 0 .5rem;padding:0 .3rem;transition:opacity .2s;text-align:center}
+#voicePlayer .vp-sub.active{opacity:1}
+#voicePlayer .vp-sub .cur{color:var(--forest);font-weight:600}
+
+.footer-sign{margin-top:40px;padding-top:20px;border-top:1px dashed var(--sage);font-size:.8rem;color:#6a7a60;text-align:center}
+.footer-sign a{color:var(--brick);text-decoration:underline;font-weight:700}
 </style>
 </head>
 <body>
 
-<!-- ===== 密码门：解密前唯一可见 ===== -->
+<!-- ============ 密码门 ============ -->
 <div id="gate">
   <div class="gate-box">
-    <div class="logo">🪐</div>
-    <h1>政治理论 · 磨耳朵</h1>
+    <div class="logo">🎧</div>
+    <h1>磨耳朵电台</h1>
     <div class="who">这是给那个特别的你准备的</div>
     <div class="gate-card">
-      <div class="gate-hint">🔑 这是一个加密的学习电台，输入正确答案即可进入</div>
-      <div class="gate-q">这是给谁准备的呀？</div>
-      <input id="pwdInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="请输入答案…" enterkeyhint="go">
-      <button id="unlockBtn">进入电台</button>
-      <div id="gateErr" role="alert"></div>
+      <div class="gate-hint">密码提示：<b>这是给谁准备的呀？</b></div>
+      <div class="gate-q">请输入开启口令</div>
+      <input id="pwdInput" type="password" placeholder="输入口令" autocomplete="off" autocapitalize="off">
+      <button id="unlockBtn">开启电台</button>
+      <div id="gateErr"></div>
     </div>
-    <div class="gate-foot">资料仅用于个人学习，请勿外传。<br>提示：答案是这个电台主人的名字。</div>
+    <div class="gate-foot">资料仅供个人学习使用 · 内容加密存储<br>未输入正确口令前不渲染任何正文</div>
   </div>
 </div>
 
-<!-- ===== 主应用（解密成功后才显示） ===== -->
+<button class="sidebar-toggle" id="sideToggle" aria-label="目录">☰</button>
+<div class="backdrop" id="backdrop"></div>
+
+<!-- ============ 应用主体（解密成功后才显示） ============ -->
 <div id="app">
-  <div class="topbar">
-    <button class="menu-btn" id="menuBtn" aria-label="目录">☰</button>
-    <div class="title" id="topTitle">政治理论背诵</div>
-    <div class="stats" id="topStats"></div>
-  </div>
+<div class="layout">
+  <!-- 左侧栏 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">政治理论<br>背诵电台</div>
+    <div class="brand-sub">磨耳朵 · 边听边记</div>
+    <div class="stat-line">共 <b id="statSects">-</b> 节 · <b id="statTracks">-</b> 段音频<br>总时长约 <b id="statMins">-</b> 分钟</div>
+    <nav id="navList"></nav>
+  </aside>
 
-  <!-- 侧边导航 -->
-  <div class="sidenav" id="sidenav">
-    <div class="nav-head">
-      <h2>📚 目录</h2>
-      <p id="navSummary">加载中…</p>
+  <!-- 右侧主区 -->
+  <main class="main">
+    <div class="main-inner">
+      <div class="hero">
+        <h1>政治理论 · 磨耳朵背诵</h1>
+        <div class="lead">把资料一的 24 节内容做成可听、可看、可背的电台。点击右侧 🎧 书签脊开始连续播放，或点任意节的「听这章」从该节开始听。挖空处配有 AI 参考填空，读前会有提示。</div>
+      </div>
+      <div id="content"></div>
+      <div class="footer-sign">
+        由 <a href="https://lyzbcy.github.io/" target="_blank" rel="noopener">捞鱼</a> 制作 · 这个工具能帮你磨耳朵背书，但不能代替系统学习。
+      </div>
     </div>
-    <div class="nav-close"><button id="navCloseBtn" aria-label="关闭">✕</button></div>
-    <div id="navList"></div>
-  </div>
-  <div class="mask" id="mask"></div>
-
-  <!-- 主内容 -->
-  <main class="main" id="main"></main>
-
-  <footer>
-    由 <a href="https://lyzbcy.github.io/" target="_blank" rel="noopener" style="color:var(--brick);text-decoration:underline;font-weight:700">捞鱼</a> 制作 · 资料仅用于个人背诵学习
-  </footer>
-
-  <!-- 底部播放器 -->
-  <div class="player" id="player">
-    <button class="p-btn" id="pPrev" aria-label="上一节" disabled>⏮</button>
-    <button class="p-btn main" id="pPlay" aria-label="播放/暂停">▶</button>
-    <button class="p-btn" id="pNext" aria-label="下一节" disabled>⏭</button>
-    <div class="p-info">
-      <div class="p-now" id="pNow">未播放</div>
-      <div class="p-sub" id="pSub">点任意章节的「读」开始磨耳朵</div>
-    </div>
-    <button class="p-rate" id="pRate">1.0×</button>
-  </div>
+  </main>
 </div>
 
-<!-- 推广 -->
-<div class="promo-fab"><button id="promoBtn">🐟 关于捞鱼</button></div>
-<div class="modal-mask" id="promoModal">
-  <div class="modal">
-    <span class="tag">捞鱼工作室</span>
-    <h3>捞鱼</h3>
-    <p style="color:#666;margin:4px 0 10px">一个弱小但有梦想的开发者</p>
-    <p>把难啃的干货拆成有原文依据、能追问、能复述的理解地图。</p>
-    <div class="qr-grid">
-      <div class="qr-cell"><div class="ph">💬</div>QQ群</div>
-      <div class="qr-cell"><div class="ph">❤️</div>赞赏</div>
-      <div class="qr-cell"><div class="ph">🎉</div>表情包</div>
-    </div>
-    <a href="https://lyzbcy.github.io/about/" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:14px;background:var(--forest);color:#fff;padding:10px;border-radius:8px;text-decoration:none;font-family:var(--font-head)">了解更多 →</a>
-    <button id="closeModal" style="margin-top:10px;width:100%;background:none;border:1px solid #ccc;border-radius:8px;padding:8px;cursor:pointer">关闭</button>
+<!-- 章节播报列表 -->
+<script type="application/json" id="voicePlaylist">
+[
+  {
+    "id": "ch001",
+    "title": "马原·第一节 绪论",
+    "src": "audio/ch001.mp3"
+  },
+  {
+    "id": "ch002",
+    "title": "马原·第二节 唯物论",
+    "src": "audio/ch002.mp3"
+  },
+  {
+    "id": "ch003",
+    "title": "马原·第三节 唯物辩证法",
+    "src": "audio/ch003.mp3"
+  },
+  {
+    "id": "ch004",
+    "title": "马原·第四节 认识论",
+    "src": "audio/ch004.mp3"
+  },
+  {
+    "id": "ch005",
+    "title": "马原·第五节 唯物史观",
+    "src": "audio/ch005.mp3"
+  },
+  {
+    "id": "ch006",
+    "title": "马原·第六节 政治经济学",
+    "src": "audio/ch006.mp3"
+  },
+  {
+    "id": "ch007",
+    "title": "习思想·总论",
+    "src": "audio/ch007.mp3"
+  },
+  {
+    "id": "ch008",
+    "title": "习思想·第一节 党的全面领导和以人民为中心",
+    "src": "audio/ch008.mp3"
+  },
+  {
+    "id": "ch009",
+    "title": "习思想·第二节 五位一体总体布局",
+    "src": "audio/ch009.mp3"
+  },
+  {
+    "id": "ch010",
+    "title": "习思想·第三节 四个全面战略布局",
+    "src": "audio/ch010.mp3"
+  },
+  {
+    "id": "ch011",
+    "title": "习思想·第四节 四个条件",
+    "src": "audio/ch011.mp3"
+  },
+  {
+    "id": "ch012",
+    "title": "会议文件·第一节 二十届四中全会与十五五规划建议",
+    "src": "audio/ch012.mp3"
+  },
+  {
+    "id": "ch013",
+    "title": "会议文件·第二节 全国两会与政府工作报告",
+    "src": "audio/ch013.mp3"
+  },
+  {
+    "id": "ch014",
+    "title": "会议文件·第三节 中央经济工作会议",
+    "src": "audio/ch014.mp3"
+  },
+  {
+    "id": "ch015",
+    "title": "会议文件·第四节 中央一号文件",
+    "src": "audio/ch015.mp3"
+  },
+  {
+    "id": "ch016",
+    "title": "会议文件·第五节 中央政治局集体学习",
+    "src": "audio/ch016.mp3"
+  },
+  {
+    "id": "ch017",
+    "title": "时政·2025年10月",
+    "src": "audio/ch017.mp3"
+  },
+  {
+    "id": "ch018",
+    "title": "时政·2025年11月",
+    "src": "audio/ch018.mp3"
+  },
+  {
+    "id": "ch019",
+    "title": "时政·2025年12月",
+    "src": "audio/ch019.mp3"
+  },
+  {
+    "id": "ch020",
+    "title": "时政·2026年1月",
+    "src": "audio/ch020.mp3"
+  },
+  {
+    "id": "ch021",
+    "title": "时政·2026年2月 金融强国",
+    "src": "audio/ch021.mp3"
+  },
+  {
+    "id": "ch022a",
+    "title": "时政·2026年3月（1/2）",
+    "src": "audio/ch022a.mp3"
+  },
+  {
+    "id": "ch022b",
+    "title": "时政·2026年3月（2/2）",
+    "src": "audio/ch022b.mp3"
+  },
+  {
+    "id": "ch023",
+    "title": "时政·2026年4月",
+    "src": "audio/ch023.mp3"
+  },
+  {
+    "id": "ch024",
+    "title": "时政·2026年5月",
+    "src": "audio/ch024.mp3"
+  }
+]
+</script>
+
+<!-- 右侧书签脊 -->
+<button id="voiceFab" aria-label="打开后台语音"><span class="fab-icon">🎧</span><span class="fab-text">后台语音</span></button>
+
+<!-- 圆润玩具风播放器 -->
+<div id="voicePlayer">
+  <button class="vp-close" aria-label="关闭">✕</button>
+  <div class="vp-head">🎧 后台语音 · 连续播放</div>
+  <div class="vp-title">—</div>
+  <div class="vp-controls">
+    <button class="vp-prev" aria-label="上一章">⏮</button>
+    <button class="vp-play" aria-label="播放/暂停">▶</button>
+    <button class="vp-next" aria-label="下一章">⏭</button>
   </div>
+  <input class="vp-seek" type="range" min="0" max="1000" value="0" aria-label="进度">
+  <div class="vp-time"><span class="vp-cur">00:00</span><span class="vp-dur">00:00</span></div>
+  <div class="vp-sub">点开播放后，这里会同步显示字幕</div>
 </div>
 
-<!-- ===== 加密数据（密文，F12 只能看到密文） ===== -->
+</div><!-- /#app -->
+
+<!-- ============ 解密 + 渲染逻辑 ============ -->
 <script src="encrypted-data.js"></script>
-
-<!-- ===== 应用逻辑 ===== -->
 <script>
 (function(){
 "use strict";
+// ---- 密码门：WebCrypto AES-GCM 解密 ----
+var gate=document.getElementById('gate');
+var app=document.getElementById('app');
+var pwdInput=document.getElementById('pwdInput');
+var unlockBtn=document.getElementById('unlockBtn');
+var gateErr=document.getElementById('gateErr');
 
-// ---------- 加密参数（与 Python 端一致） ----------
-var SALT_B64 = window.__SALT;   // 固定 salt（不保密）
-var ITERS = window.__ITERS;     // PBKDF2 迭代
-var CIPHER = window.__CIPHER;   // base64( nonce(12) || ct+tag )
-
-// ---------- 工具：base64 <-> ArrayBuffer ----------
 function b64ToBuf(b64){
-  var bin = atob(b64);
-  var len = bin.length, bytes = new Uint8Array(len);
-  for(var i=0;i<len;i++) bytes[i] = bin.charCodeAt(i);
+  var bin=atob(b64); var len=bin.length; var bytes=new Uint8Array(len);
+  for(var i=0;i<len;i++) bytes[i]=bin.charCodeAt(i);
   return bytes.buffer;
 }
 
-// ---------- 解密：密码 -> 明文 JSON 字符串 ----------
-async function decrypt(password){
-  var enc = new TextEncoder();
-  var keyBytes = await crypto.subtle.deriveBits(
-    {name:'PBKDF2', salt:b64ToBuf(SALT_B64), iterations:ITERS, hash:'SHA-256'},
-    await crypto.subtle.importKey('raw', enc.encode(password), {name:'PBKDF2'}, false, ['deriveBits']),
-    256
+async function deriveKey(password, salt, iters){
+  var enc=new TextEncoder();
+  var keyMaterial=await crypto.subtle.importKey('raw', enc.encode(password), {name:'PBKDF2'}, false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    {name:'PBKDF2', salt:salt, iterations:iters, hash:'SHA-256'},
+    keyMaterial,
+    {name:'AES-GCM', length:256},
+    false,
+    ['decrypt']
   );
-  var key = await crypto.subtle.importKey('raw', keyBytes, {name:'AES-GCM'}, false, ['decrypt']);
-  var all = new Uint8Array(b64ToBuf(CIPHER));
-  var nonce = all.slice(0,12);
-  var data = all.slice(12);
-  var pt;
-  try{
-    pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:nonce}, key, data);
-  }catch(e){
-    throw new Error('密码错误或数据损坏');
-  }
-  return new TextDecoder('utf-8').decode(pt);
 }
 
-// ---------- 数据 ----------
-var TREE = null;          // 解密后的学习树
-var FLAT = [];            // 扁平化所有可朗读单元 [{path, title, text, level, parent...}]
-var curIdx = -1;          // 当前朗读/查看的单元索引
-var revealMode = false;   // 是否显示挖空答案
-
-// ---------- 密码门 ----------
-var gate = document.getElementById('gate');
-var pwdInput = document.getElementById('pwdInput');
-var unlockBtn = document.getElementById('unlockBtn');
-var gateErr = document.getElementById('gateErr');
-
-async function tryUnlock(){
-  var pwd = pwdInput.value.trim();
-  if(!pwd){ gateErr.textContent = '请输入答案。'; return; }
-  unlockBtn.disabled = true;
-  unlockBtn.textContent = '解密中…';
-  gateErr.textContent = '';
+async function tryUnlock(password){
+  unlockBtn.disabled=true; gateErr.textContent='正在解锁…';
   try{
-    var json = await decrypt(pwd);
-    TREE = JSON.parse(json);
-    enterApp();
+    var salt=b64ToBuf(window.__SALT);
+    var cipherBuf=b64ToBuf(window.__CIPHER);
+    var key=await deriveKey(password, salt, window.__ITERS);
+    // nonce(12) 前置
+    var nonce=cipherBuf.slice(0,12);
+    var data=cipherBuf.slice(12);
+    var plainBuf=await crypto.subtle.decrypt({name:'AES-GCM', iv:nonce}, key, data);
+    var plainText=new TextDecoder().decode(plainBuf);
+    var data2=JSON.parse(plainText);
+    renderApp(data2);
+    gate.classList.add('unlocked');
+    app.classList.add('shown');
   }catch(e){
-    gateErr.textContent = '❌ 答案不对哦，再想想这是给谁准备的？';
+    gateErr.textContent='口令不对哦，再想想这是给谁准备的？';
     pwdInput.select();
   }finally{
-    unlockBtn.disabled = false;
-    unlockBtn.textContent = '进入电台';
+    unlockBtn.disabled=false;
   }
 }
-unlockBtn.addEventListener('click', tryUnlock);
-pwdInput.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); tryUnlock(); } });
-setTimeout(function(){ pwdInput && pwdInput.focus(); }, 200);
 
-// ---------- 进入应用 ----------
-function enterApp(){
-  gate.classList.add('unlocked');
-  document.getElementById('app').classList.add('shown');
+unlockBtn.addEventListener('click', function(){ tryUnlock(pwdInput.value); });
+pwdInput.addEventListener('keydown', function(e){ if(e.key==='Enter') tryUnlock(pwdInput.value); });
 
-  // 扁平化
-  TREE.forEach(function(part, pi){
-    part.chapters.forEach(function(chap, ci){
-      // 章本身有 text 也算一个单元
-      if(chap.text && chap.text.trim()){
-        FLAT.push({kind:'chap', pi:pi, ci:ci, title:chap.title, text:chap.text, parent:part.title});
-      }
-      chap.sections.forEach(function(sec, si){
-        FLAT.push({kind:'sec', pi:pi, ci:ci, si:si, title:sec.title, text:sec.text, level:sec.level, parent:chap.title, part:part.title});
+// ---- 渲染应用（解密成功后调用，此时才构建正文 DOM）----
+var SECT_TRACK={}; // 节标题/序号 -> track id，用于「听这章」按钮
+var TRACKS=[];
+try{ TRACKS=JSON.parse(document.getElementById('voicePlaylist').textContent.trim()); }catch(e){}
+
+function renderApp(parts){
+  // 统计
+  var nSect=0;
+  parts.forEach(function(p){ p.chapters.forEach(function(c){ nSect+=c.sections.length; }); });
+  document.getElementById('statSects').textContent=nSect;
+  document.getElementById('statTracks').textContent=TRACKS.length;
+  // 时长估算（后续由音频元数据修正）
+  document.getElementById('statMins').textContent='~'+Math.round(TRACKS.length*2.6);
+
+  // 构建侧边栏导航
+  var navHtml='';
+  var sectIdx=0;
+  parts.forEach(function(p){
+    navHtml+='<div class="nav-group"><div class="gp">'+esc(p.title)+'</div>';
+    p.chapters.forEach(function(c){
+      navHtml+='<div class="gc">'+esc(c.title)+'</div>';
+      c.sections.forEach(function(s){
+        sectIdx++;
+        var tid=mapSectToTrack(sectIdx, s.title);
+        SECT_TRACK['sect'+sectIdx]=tid;
+        navHtml+='<a class="nav-item" href="#sect'+sectIdx+'"><span class="ni-no">'+String(sectIdx).padStart(2,'0')+'</span><span>'+esc(s.title)+'</span></a>';
       });
     });
+    navHtml+='</div>';
   });
+  document.getElementById('navList').innerHTML=navHtml;
 
-  buildNav();
-  document.getElementById('navSummary').textContent =
-    TREE.length + ' 篇 · ' + FLAT.length + ' 个朗读单元 · 约 ' + Math.round(totalChars()/280) + ' 分钟';
-  document.getElementById('topStats').textContent = FLAT.length + ' 节';
-
-  // 默认打开第一个
-  openUnit(0);
-
-  // 初始化播放器
-  initPlayer();
-  initMediaSession();
-}
-
-function totalChars(){
-  var s=0; FLAT.forEach(function(u){ s+=u.text.length; }); return s;
-}
-
-// ---------- 导航构建 ----------
-function buildNav(){
-  var nav = document.getElementById('navList');
-  nav.innerHTML = '';
-  TREE.forEach(function(part, pi){
-    var d1 = document.createElement('div');
-    d1.className = 'nav-item lvl1';
-    d1.textContent = part.title;
-    nav.appendChild(d1);
-    part.chapters.forEach(function(chap, ci){
-      var d2 = document.createElement('div');
-      d2.className = 'nav-item lvl2';
-      d2.textContent = chap.title;
-      d2.addEventListener('click', function(){
-        // 跳到该章第一个单元
-        var idx = FLAT.findIndex(function(u){return u.pi===pi && u.ci===ci;});
-        if(idx>=0) openUnit(idx);
-        closeNavMobile();
-      });
-      nav.appendChild(d2);
-      chap.sections.forEach(function(sec, si){
-        var d3 = document.createElement('div');
-        d3.className = 'nav-item lvl3';
-        d3.textContent = sec.title;
-        d3.addEventListener('click', function(){
-          var idx = FLAT.findIndex(function(u){return u.pi===pi && u.ci===ci && u.si===si;});
-          if(idx>=0) openUnit(idx);
-          closeNavMobile();
+  // 构建正文
+  var cHtml='';
+  sectIdx=0;
+  parts.forEach(function(p){
+    p.chapters.forEach(function(c){
+      c.sections.forEach(function(s){
+        sectIdx++;
+        var sid='sect'+sectIdx;
+        var tid=SECT_TRACK[sid];
+        cHtml+='<section class="sec" id="'+sid+'">';
+        cHtml+='<div class="sec-head"><span class="sec-no">'+sectIdx+'</span><h2>'+esc(s.title)+'</h2>';
+        if(tid) cHtml+='<button class="voice-btn" data-voice-id="'+tid+'">🎧 听这章</button>';
+        cHtml+='</div>';
+        s.blocks.forEach(function(b){
+          if(b.type==='h2'){
+            cHtml+='<div class="b-h2">'+esc(b.text)+'</div>';
+          }else if(b.type==='table'){
+            b.items.forEach(function(it){
+              cHtml+='<div class="tbl-item"><span class="lbl">'+esc(it.label||'·')+'</span><div class="txt">'+renderBlanks(it.text)+'</div></div>';
+            });
+          }else{
+            cHtml+='<div class="b-body">'+renderBlanks(b.text)+'</div>';
+          }
         });
-        nav.appendChild(d3);
+        cHtml+='</section>';
       });
     });
   });
+  document.getElementById('content').innerHTML=cHtml;
+
+  // 侧边栏点击 + 滚动高亮
+  bindNav();
+  // 移动端侧边栏开关
+  bindMobileSidebar();
 }
 
-// ---------- 正文渲染：保留挖空 ----------
-function renderText(text){
-  // 把文本转成 HTML：<br> 换行；连续 2+ 个全角空格或下划线视为挖空
-  // 易错点 标记保留
-  var esc = text
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  // 换行
-  var html = esc.replace(/\n/g,'<br>');
-  // 挖空：识别"连续空白/下划线/多个。"占位 —— 这里原文挖空表现为"标志："后留空
-  // 规则：行末或词后的连续 2+ 个空格、或连续下划线 视为填空
-  html = html.replace(/(_{2,}|[ ]{3,})/g, '<span class="blank">$&</span>');
-  // "易错点" 高亮
-  html = html.replace(/(【易错点】[^【\n]*(?:<br>[^【\n]*)*)/g, function(m){
-    return '<span class="ezhi">'+m.replace(/<br>/g,'<br>')+'</span>';
+// 节序号 -> 音频 track id 的映射
+// ch001..ch011 对应节1..11；ch012..ch016 对应节12..16；ch017.. 对应节17..（注意时政有拆分子段，取主 id）
+function mapSectToTrack(sectIdx, title){
+  // 节序号即为 ch<idx> 的主 id（拆分子段 a/b 用主 id 也能从该节开始）
+  var id='ch'+String(sectIdx).padStart(3,'0');
+  // 校验该 id 是否在 TRACKS 里；拆分时主 id 可能不在（只有 a/b），则取 a
+  var has=TRACKS.some(function(t){return t.id===id;});
+  if(has) return id;
+  var ida=id+'a';
+  if(TRACKS.some(function(t){return t.id===ida;})) return ida;
+  return null;
+}
+
+function renderBlanks(text){
+  // 把 ____ 渲染成空格填空样式；转义 HTML
+  var esc2=esc(text);
+  return esc2.replace(/_{2,}/g, '<span class="blank">　　</span>');
+}
+
+function esc(s){
+  s=String(s==null?'':s);
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// 侧边栏导航：点击跳转 + 当前节高亮
+function bindNav(){
+  var items=document.querySelectorAll('.nav-item');
+  items.forEach(function(it){
+    it.addEventListener('click', function(e){
+      e.preventDefault();
+      var href=it.getAttribute('href');
+      var target=document.querySelector(href);
+      if(target){
+        target.scrollIntoView({behavior:'smooth', block:'start'});
+        // 收起移动端侧边栏
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('backdrop').classList.remove('show');
+      }
+    });
   });
-  return html;
-}
-
-// ---------- 打开某个单元 ----------
-function openUnit(idx){
-  if(idx<0 || idx>=FLAT.length) return;
-  curIdx = idx;
-  var u = FLAT[idx];
-  var main = document.getElementById('main');
-
-  // 高亮导航
-  document.querySelectorAll('.nav-item').forEach(function(el){el.classList.remove('active');});
-
-  // 标题区
-  var partTitle = u.part || u.parent;
-  var html = '';
-  html += '<div class="reader-sub"><b>'+esc(partTitle)+'</b> · 第 '+(idx+1)+' / '+FLAT.length+' 单元</div>';
-  html += '<h1 class="reader-h1">'+esc(u.title)+'</h1>';
-
-  // 工具栏
-  html += '<div class="tool-row">'+
-    '<button class="tool-btn" id="readBtn">🔊 朗读本节</button>'+
-    '<button class="tool-btn" id="revealBtn">'+(revealMode?'🙈 隐藏答案':'👁 显示填空')+'</button>'+
-    '<button class="tool-btn" id="quizBtn">📝 背诵自测</button>'+
-  '</div>';
-
-  // 正文
-  html += '<div class="chapter-card current" id="cc">';
-  html += '<div class="cc-head"><h3>'+esc(u.title)+'</h3>'+
-    '<div class="cc-actions">'+
-      '<button class="mini-btn play" data-act="read">🔊 读</button>'+
-    '</div></div>';
-  html += '<div class="body-text" id="bodyText">'+renderText(u.text)+'</div>';
-  html += '</div>';
-
-  // 章节导航
-  html += '<div class="chap-nav">'+
-    '<button id="prevBtn" '+(idx<=0?'disabled':'')+'>← 上一节</button>'+
-    '<button class="nx" id="nextBtn" '+(idx>=FLAT.length-1?'disabled':'')+'>下一节 →</button>'+
-  '</div>';
-
-  main.innerHTML = html;
-  document.getElementById('topTitle').textContent = u.title;
-  window.scrollTo(0,0);
-
-  // 绑定
-  document.getElementById('readBtn').onclick = function(){ playUnit(idx); };
-  document.querySelector('[data-act="read"]').onclick = function(){ playUnit(idx); };
-  document.getElementById('revealBtn').onclick = toggleReveal;
-  document.getElementById('quizBtn').onclick = function(){ buildQuiz(idx); };
-  document.getElementById('prevBtn').onclick = function(){ if(idx>0) openUnit(idx-1); };
-  document.getElementById('nextBtn').onclick = function(){ if(idx<FLAT.length-1) openUnit(idx+1); };
-
-  applyReveal();
-}
-
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-function toggleReveal(){
-  revealMode = !revealMode;
-  applyReveal();
-  var btn = document.getElementById('revealBtn');
-  if(btn) btn.textContent = revealMode ? '🙈 隐藏答案' : '👁 显示填空';
-}
-function applyReveal(){
-  document.querySelectorAll('.blank').forEach(function(el){
-    if(revealMode){ el.classList.add('blank-reveal'); el.style.color='var(--brick)'; }
-    else { el.classList.remove('blank-reveal'); el.style.color='transparent'; }
-  });
-}
-
-// ---------- 朗读文本预处理（让 TTS 不读挖空占位符） ----------
-function ttsClean(text){
-  var t = text
-    .replace(/【易错点】/g,'易错点，')
-    .replace(/_{2,}/g,'，挖空，')
-    .replace(/[ ]{3,}/g,'，挖空，')
-    .replace(/[（）()]/g,function(m){return m;})
-    .replace(/[\u3000]/g,'')
-    .replace(/\n{2,}/g,'。')
-    .replace(/\n/g,'，')
-    .replace(/-{2,}/g,'');
-  // 中英文符号间补一点停顿
-  return t;
-}
-
-// ================= TTS 播放器 =================
-var synth = window.speechSynthesis;
-var curUtter = null;
-var isPlaying = false;
-var isPaused = false;
-var rateIdx = 2;
-var RATES = [0.8, 0.9, 1.0, 1.1, 1.25, 1.4, 1.6];
-var zhVoice = null;
-var queue = [];        // 长文本分块队列
-var queueIdx = 0;
-
-function loadVoices(){
-  var vs = synth.getVoices();
-  // 优先选高质量中文女声
-  var pref = vs.filter(function(v){return /zh|cmn|Chinese/i.test(v.lang) && /female|女|Ting|Ya|Hui|Xia|Mei/i.test(v.name);});
-  zhVoice = pref[0] || vs.filter(function(v){return /zh|cmn/i.test(v.lang);})[0] || null;
-}
-if(synth){
-  loadVoices();
-  synth.onvoiceschanged = loadVoices;
-}
-
-function splitChunks(text, maxLen){
-  // 按句号/问号/叹号/分号切，每块不超过 maxLen
-  var parts = text.split(/(?<=[。！？；\.\!\?])/);
-  var chunks = [], cur = '';
-  for(var i=0;i<parts.length;i++){
-    if((cur+parts[i]).length > maxLen && cur){
-      chunks.push(cur); cur = parts[i];
-    }else{
-      cur += parts[i];
-    }
-  }
-  if(cur) chunks.push(cur);
-  return chunks.filter(function(s){return s.trim();});
-}
-
-function playUnit(idx){
-  if(idx<0||idx>=FLAT.length) return;
-  curIdx = idx;
-  var u = FLAT[idx];
-  var cleaned = ttsClean(u.text);
-  queue = splitChunks(cleaned, 180);
-  queueIdx = 0;
-  startQueuePlayback();
-  updatePlayerUI(u);
-  document.getElementById('player').classList.add('show');
-}
-
-function startQueuePlayback(){
-  if(!synth) { alert('当前浏览器不支持语音合成，建议用 Chrome/Edge。'); return; }
-  synth.cancel();
-  isPlaying = true; isPaused = false;
-  speakNextChunk();
-  updatePlayBtn();
-}
-
-function speakNextChunk(){
-  if(queueIdx >= queue.length){
-    // 本节读完，自动下一节
-    if(curIdx < FLAT.length-1){
-      playUnit(curIdx+1);
-    }else{
-      isPlaying = false;
-      updatePlayBtn();
-      document.getElementById('pNow').textContent = '✅ 全部读完了，辛苦啦！';
-      document.getElementById('pSub').textContent = '点击任意节重新开始';
-    }
-    return;
-  }
-  var u = new SpeechSynthesisUtterance(queue[queueIdx]);
-  u.lang = 'zh-CN';
-  if(zhVoice) u.voice = zhVoice;
-  u.rate = RATES[rateIdx];
-  u.pitch = 1.0;
-  u.onend = function(){
-    if(isPlaying && !isPaused){
-      queueIdx++;
-      // 小间隔，避免太急
-      setTimeout(speakNextChunk, 60);
-    }
-  };
-  u.onerror = function(){
-    // 出错跳过这块
-    queueIdx++;
-    if(isPlaying) setTimeout(speakNextChunk, 60);
-  };
-  curUtter = u;
-  synth.speak(u);
-}
-
-function togglePlay(){
-  if(!synth) return;
-  if(!isPlaying){
-    // 没在播放：从当前节开始
-    if(curIdx<0) curIdx=0;
-    if(queue.length===0){ playUnit(curIdx); return; }
-    // 恢复
-    isPlaying = true; isPaused = false;
-    speakNextChunk();
-  }else{
-    // 正在播放：暂停/继续
-    if(isPaused){
-      synth.resume(); isPaused=false;
-    }else{
-      synth.pause(); isPaused=true;
-    }
-  }
-  updatePlayBtn();
-}
-
-function updatePlayBtn(){
-  var b = document.getElementById('pPlay');
-  if(!b) return;
-  if(!isPlaying) b.textContent = '▶';
-  else b.textContent = isPaused ? '▶' : '⏸';
-}
-
-function updatePlayerUI(u){
-  document.getElementById('pNow').textContent = u.title;
-  document.getElementById('pSub').textContent = (u.part||u.parent||'') + ' · 第 '+(curIdx+1)+'/'+FLAT.length+' 节';
-  document.getElementById('pPrev').disabled = curIdx<=0;
-  document.getElementById('pNext').disabled = curIdx>=FLAT.length-1;
-}
-
-function initPlayer(){
-  var pp = document.getElementById('player');
-  pp.classList.add('show');
-  document.getElementById('pPlay').onclick = togglePlay;
-  document.getElementById('pPrev').onclick = function(){
-    if(curIdx>0){ playUnit(curIdx-1); }
-  };
-  document.getElementById('pNext').onclick = function(){
-    if(curIdx<FLAT.length-1){ playUnit(curIdx+1); }
-  };
-  document.getElementById('pRate').onclick = function(){
-    rateIdx = (rateIdx+1)%RATES.length;
-    document.getElementById('pRate').textContent = RATES[rateIdx].toFixed(2).replace(/0$/,'')+'×';
-    // 立即应用到下一段
-  };
-  // 初始 rate 显示
-  document.getElementById('pRate').textContent = RATES[rateIdx].toFixed(2).replace(/0$/,'')+'×';
-}
-
-// ---------- Media Session：锁屏控制 + 后台保活 ----------
-function initMediaSession(){
-  if(!('mediaSession' in navigator)) return;
-  navigator.mediaSession.setActionHandler('play', function(){ togglePlay(); });
-  navigator.mediaSession.setActionHandler('pause', function(){ togglePlay(); });
-  navigator.mediaSession.setActionHandler('previoustrack', function(){
-    if(curIdx>0) playUnit(curIdx-1);
-  });
-  navigator.mediaSession.setActionHandler('nexttrack', function(){
-    if(curIdx<FLAT.length-1) playUnit(curIdx+1);
-  });
-}
-function updateMediaMeta(u){
-  if(!('mediaSession' in navigator)) return;
-  navigator.mediaSession.metadata = new MediaMetadata({
-    title: u.title,
-    artist: u.part || u.parent || '政治理论背诵',
-    album: '磨耳朵电台',
-    artwork: []
-  });
-}
-// 播放状态同步
-function msState(){
-  if(!('mediaSession' in navigator)) return;
-  navigator.mediaSession.playbackState = (isPlaying && !isPaused) ? 'playing' : 'paused';
-}
-
-// iOS Safari 后台保活：周期性 resume（防止锁屏暂停）
-setInterval(function(){
-  if(synth && isPlaying && !isPaused){
-    // 部分 iOS 需要 keep-alive
-    if(synth.speaking && synth.paused){ synth.resume(); }
-  }
-  msState();
-}, 4000);
-
-// 页面隐藏时不主动取消（让后台继续）；visibility 回来时如果异常则恢复
-document.addEventListener('visibilitychange', function(){
-  if(document.visibilityState==='visible' && isPlaying && !isPaused && synth && synth.paused){
-    synth.resume();
-  }
-});
-
-// ---------- 抽屉导航 ----------
-function openNavMobile(){ document.getElementById('sidenav').classList.add('open'); document.getElementById('mask').classList.add('show'); }
-function closeNavMobile(){ document.getElementById('sidenav').classList.remove('open'); document.getElementById('mask').classList.remove('show'); }
-document.getElementById('menuBtn').onclick = openNavMobile;
-document.getElementById('mask').onclick = closeNavMobile;
-document.getElementById('navCloseBtn').onclick = closeNavMobile;
-
-// ---------- 背诵自测题（基于当前节，自动从挖空生成） ----------
-function buildQuiz(idx){
-  var u = FLAT[idx];
-  var main = document.getElementById('main');
-  // 找出本节的"定义型"句子做填空题：取含书名号或关键术语的句
-  // 简化策略：用本节关键短语做"复述判断题"
-  var sentences = ttsClean(u.text).split(/(?<=[。！？])/).filter(function(s){return s.length>10;});
-  var quizHTML = '<div class="quiz-wrap"><span class="quiz-tag">📝 背诵自测 · '+esc(u.title)+'</span>';
-  quizHTML += '<p style="font-size:.86rem;color:#666">下面是从本节内容出的判断题，帮你检验是否真的记住了。每题选完点「检查」。</p>';
-
-  // 取前 4 句，改造成判断题（随机把一句改成错句或保留原句）
-  var picked = sentences.slice(0, Math.min(5, sentences.length));
-  picked.forEach(function(s, i){
-    // 50% 概率"改成错误版本"：把句子里的某个数字/关键词替换
-    var isTrue = Math.random() > 0.5;
-    var display = s;
-    var answer = 'T';
-    if(!isTrue){
-      // 尝试替换一个数字
-      var mod = s.replace(/(\d+(?:\.\d+)?)/, function(m){
-        var n = parseFloat(m);
-        if(!isNaN(n)) return n > 5 ? Math.max(1, Math.round(n*0.5)) : (n+3);
-        return m;
+  // 滚动时高亮当前节
+  var secs=document.querySelectorAll('.sec');
+  window.addEventListener('scroll', function(){
+    var top=window.scrollY+80;
+    var cur=null;
+    secs.forEach(function(s){ if(s.offsetTop<=top) cur=s.id; });
+    if(cur){
+      items.forEach(function(it){
+        it.classList.toggle('active', it.getAttribute('href')==='#'+cur);
       });
-      if(mod !== s){ display = mod; answer = 'F'; }
-      else { answer = 'T'; } // 没数字可改，保持原句
     }
-    quizHTML += '<div class="task" data-task="kz'+i+'" data-answer="'+answer+'" '+
-      'data-ok="✓ 这句与原文一致，判断正确。" '+
-      'data-no="✗ 再对照本节原文，这句和原文表述不完全一致。" '+
-      'data-src="依据：本节原文" data-review="回到本节正文对照原文">'+
-      '<div class="q"><span class="qn">判断'+(i+1)+'</span>下面这句话是否符合本节原文？<br><span style="font-weight:400;color:#444;background:var(--paper);padding:6px 10px;border-radius:6px;display:block;margin-top:6px">'+esc(display)+'</span></div>'+
-      '<div class="opts">'+
-        '<button class="opt" data-val="T">✓ 符合原文</button>'+
-        '<button class="opt" data-val="F">✗ 与原文不符</button>'+
-      '</div>'+
-      '<button class="check">检查</button>'+
-      '<div class="feedback" aria-live="polite">选择后点击检查，这里会显示反馈。</div>'+
-    '</div>';
-  });
-  quizHTML += '<div style="text-align:center;margin:14px 0"><button class="mini-btn alt" id="backRead">← 返回正文</button></div></div>';
-
-  // 插入到正文卡片后面
-  var quizZone = document.createElement('div');
-  quizZone.innerHTML = quizHTML;
-  var cc = document.getElementById('cc');
-  cc.parentNode.insertBefore(quizZone, cc.nextSibling);
-  document.getElementById('backRead').onclick = function(){ quizZone.remove(); };
-  quizZone.scrollIntoView({behavior:'smooth', block:'start'});
+  }, {passive:true});
 }
 
-// ---------- 推广 ----------
-document.getElementById('promoBtn').onclick = function(){ document.getElementById('promoModal').classList.add('open'); };
-document.getElementById('closeModal').onclick = function(){ document.getElementById('promoModal').classList.remove('open'); };
-document.getElementById('promoModal').onclick = function(e){ if(e.target===this) this.classList.remove('open'); };
-
+function bindMobileSidebar(){
+  var tog=document.getElementById('sideToggle');
+  var sd=document.getElementById('sidebar');
+  var bd=document.getElementById('backdrop');
+  if(tog){
+    tog.addEventListener('click', function(){
+      sd.classList.toggle('open'); bd.classList.toggle('show');
+    });
+  }
+  if(bd) bd.addEventListener('click', function(){ sd.classList.remove('open'); bd.classList.remove('show'); });
+}
 })();
 </script>
 
-<!-- ===== 固定互动引擎（原样粘贴，处理背诵自测题） ===== -->
+<!-- ============ 固定语音引擎（原样粘贴） ============ -->
 <script>
 (function(){
   "use strict";
-  function $all(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
-  function selectedVals(t){return $all('.opt.selected',t).map(function(o){return o.getAttribute('data-val');}).sort();}
-  function setFb(t,state,html){var fb=t.querySelector('.feedback');if(!fb)return;fb.className='feedback'+(state?(' '+state):'');fb.innerHTML=html;}
-  function check(t){
-    var sel=selectedVals(t);
-    if(!sel.length){setFb(t,'no','请先选择一个选项再检查。');return;}
-    var ans=(t.getAttribute('data-answer')||'').split(',').map(function(x){return x.trim();}).sort();
-    var ok=(sel.join('|')===ans.join('|'));
-    var body=ok?(t.getAttribute('data-ok')||'回答正确。'):(t.getAttribute('data-no')||'再想想。');
-    var src=t.getAttribute('data-src');
-    setFb(t,ok?'ok':'no',(ok?'✅ ':'❌ ')+body+(src?('<span style="display:block;font-size:.8rem;color:#666;margin-top:4px">'+src+'</span>'):''));
+  if(window.__voiceEngine) return;
+  window.__voiceEngine = true;
+
+  var listNode = document.getElementById('voicePlaylist');
+  if(!listNode){ return; }
+  var TRACKS = [];
+  try { TRACKS = JSON.parse(listNode.textContent.trim()); } catch(e){ return; }
+  if(!TRACKS.length) return;
+
+  var player = document.getElementById('voicePlayer');
+  var fab = document.getElementById('voiceFab');
+  var audio = new Audio(); audio.preload = 'metadata';
+  var cur = 0;
+  var ranges = [];
+  var total = 0;
+  var seeking = false;
+
+  function $(s){ return player ? player.querySelector(s) : null; }
+  function fmt(s){ s=Math.max(0,Math.floor(s||0)); var m=Math.floor(s/60), x=s%60;
+    return (m<10?'0':'')+m+':'+(x<10?'0':'')+x; }
+
+  var probe = TRACKS.map(function(){ return {dur:0}; });
+  function tryFinalize(){
+    if(probe.some(function(p){return !p.dur;})) return;
+    ranges = []; total = 0;
+    probe.forEach(function(p){ ranges.push({dur:p.dur, start:total}); total += p.dur; });
+    var d = $('.vp-dur'); if(d) d.textContent = fmt(total);
+    var sk = $('.vp-seek'); if(sk){ sk.max = Math.max(1000, Math.floor(total*10)); }
+    // 修正侧边栏总时长
+    var sm=document.getElementById('statMins'); if(sm) sm.textContent=Math.round(total/60);
   }
-  document.addEventListener('click',function(e){
-    var opt=e.target.closest && e.target.closest('.opt');
-    if(opt){var t=opt.closest('.task');if(!t)return;
-      $all('.opt',t).forEach(function(o){o.classList.remove('selected');});
-      opt.classList.add('selected');
+  TRACKS.forEach(function(t, i){
+    var a = new Audio(); a.preload = 'metadata'; a.src = t.src;
+    a.addEventListener('loadedmetadata', function(){
+      probe[i].dur = a.duration || 0; tryFinalize();
+    });
+    a.addEventListener('error', function(){ probe[i].dur = 0; tryFinalize(); });
+  });
+
+  function load(i){
+    cur = i; audio.src = TRACKS[i].src;
+    var ti = $('.vp-title'); if(ti) ti.textContent = TRACKS[i].title || ('第 '+(i+1)+' 段');
+    markBtn(i);
+  }
+  function play(){ audio.play().then(function(){ show(); setPlayIcon(true); if(fab) fab.classList.add('beat'); }).catch(function(){}); }
+  function pause(){ audio.pause(); setPlayIcon(false); if(fab) fab.classList.remove('beat'); }
+  function toggle(){ audio.paused ? play() : pause(); }
+  function next(){ if(cur < TRACKS.length-1){ load(cur+1); play(); } else { pause(); } }
+  function prev(){
+    var abs = absTime();
+    if(cur > 0 && abs - ranges[cur].start < 3){ load(cur-1); play(); }
+    else { audio.currentTime = 0; }
+  }
+  function absTime(){ return ranges[cur] ? ranges[cur].start + (audio.currentTime||0) : (audio.currentTime||0); }
+  function setPlayIcon(on){ var b=$('.vp-play'); if(b) b.textContent = on ? '⏸' : '▶'; }
+  function show(){ if(player) player.classList.add('show'); }
+  function hide(){ if(player) player.classList.remove('show'); }
+  function markBtn(i){
+    document.querySelectorAll('.voice-btn[data-voice-id]').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-voice-id') === TRACKS[i].id);
+    });
+  }
+
+  audio.addEventListener('timeupdate', function(){
+    if(seeking) return;
+    if(!ranges[cur]) return;
+    var abs = absTime(); var sk = $('.vp-seek'); var c = $('.vp-cur');
+    if(sk && total) sk.value = Math.round(abs / total * (sk.max||1000));
+    if(c) c.textContent = fmt(abs);
+  });
+  audio.addEventListener('ended', function(){ if(cur < TRACKS.length-1){ load(cur+1); play(); }
+    else { setPlayIcon(false); if(fab) fab.classList.remove('beat'); } });
+
+  function seekToFraction(frac){
+    if(!total) return;
+    var target = Math.max(0, Math.min(total, frac * total));
+    var i = 0; while(i < ranges.length-1 && ranges[i].start + ranges[i].dur < target){ i++; }
+    if(i !== cur){ cur = i; audio.src = TRACKS[i].src;
+      var ti=$('.vp-title'); if(ti) ti.textContent = TRACKS[i].title||('第 '+(i+1)+' 段'); markBtn(i); }
+    audio.currentTime = target - ranges[i].start;
+    var c=$('.vp-cur'); if(c) c.textContent = fmt(target);
+  }
+
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    var vb = t.closest ? t.closest('.voice-btn[data-voice-id]') : null;
+    if(vb){
+      var id = vb.getAttribute('data-voice-id'), idx = -1;
+      TRACKS.forEach(function(tr, k){ if(tr.id === id) idx = k; });
+      if(idx >= 0){ load(idx); play(); }
       return;
     }
-    var btn=e.target.closest && e.target.closest('.check');
-    if(btn){var tk=btn.closest('.task');if(tk)check(tk);return;}
+    if(t.id === 'voiceFab'){ show(); if(audio.paused && !audio.src){ load(0); } if(audio.paused){ play(); } return; }
+    if(!player || !player.contains(t)) return;
+    if(t.classList.contains('vp-play')){ toggle(); return; }
+    if(t.classList.contains('vp-prev')){ prev(); return; }
+    if(t.classList.contains('vp-next')){ next(); return; }
+    if(t.classList.contains('vp-close')){ pause(); hide(); return; }
   });
+  var sk = $('.vp-seek');
+  if(sk){
+    sk.addEventListener('input', function(){ seeking = true;
+      if(total){ var c=$('.vp-cur'); if(c) c.textContent = fmt((sk.value/(sk.max||1000))*total); } });
+    sk.addEventListener('change', function(){ seekToFraction(sk.value/(sk.max||1000)); seeking = false; });
+  }
 })();
 </script>
+
+<!-- ============ 字幕同步引擎（原样粘贴） ============ -->
+<script>
+(function(){
+  "use strict";
+  if(window.__subEngine) return;
+  window.__subEngine = true;
+
+  var listNode = document.getElementById("voicePlaylist");
+  if(!listNode) return;
+  var subBox = document.querySelector("#voicePlayer .vp-sub");
+  var curEl = document.querySelector("#voicePlayer .vp-cur");
+  var titleEl = document.querySelector("#voicePlayer .vp-title");
+  if(!subBox) return;
+
+  var subs = [];
+  var subCache = {};
+  var curSrc = "";
+
+  function esc(s){ var d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+
+  function mp3ToJson(src){
+    var m = src.replace(/^.*?([a-zA-Z0-9_\/.\-]+\.mp3)(?:\?.*)?$/i, "$1");
+    return m.replace(/\.mp3$/i, ".json");
+  }
+
+  function loadSubFor(src){
+    if(!src || src === curSrc) return;
+    curSrc = src;
+    var jsonUrl = mp3ToJson(src);
+    if(subCache[jsonUrl]){ subs = subCache[jsonUrl]; return; }
+    fetch(jsonUrl).then(function(r){
+      if(!r.ok) throw new Error(r.status);
+      return r.json();
+    }).then(function(arr){
+      subCache[jsonUrl] = Array.isArray(arr) ? arr : [];
+      subs = subCache[jsonUrl];
+    }).catch(function(){ subs = []; });
+  }
+
+  function parseTime(text){
+    var p = String(text).trim().split(":");
+    if(p.length === 2){
+      var m = parseInt(p[0], 10) || 0;
+      var s = parseInt(p[1], 10) || 0;
+      return m * 60 + s;
+    }
+    return parseFloat(text) || 0;
+  }
+
+  function renderSub(t){
+    if(!subs.length) return;
+    var hit = null, idx = -1;
+    for(var i = 0; i < subs.length; i++){
+      if(t >= subs[i].start && t < subs[i].end){ hit = subs[i]; idx = i; break; }
+    }
+    if(!hit){
+      var prev = null;
+      for(var j = 0; j < subs.length; j++){
+        if(subs[j].start <= t) prev = subs[j]; else break;
+      }
+      subBox.classList.remove("active");
+      subBox.innerHTML = prev ? esc(prev.text) : "";
+      return;
+    }
+    subBox.classList.add("active");
+    var prevHtml = idx > 0
+      ? '<span style="opacity:.45">' + esc(subs[idx - 1].text) + "</span> "
+      : "";
+    subBox.innerHTML = prevHtml + '<span class="cur">' + esc(hit.text) + "</span>";
+  }
+
+  function tick(){
+    if(!curEl) return;
+    var sec = parseTime(curEl.textContent);
+    renderSub(sec);
+  }
+
+  function onTitleChange(){
+    var TRACKS = [];
+    try { TRACKS = JSON.parse(listNode.textContent.trim()); } catch(e){ return; }
+    var title = titleEl ? titleEl.textContent.trim() : "";
+    for(var i = 0; i < TRACKS.length; i++){
+      if(TRACKS[i].title === title){ loadSubFor(TRACKS[i].src); return; }
+    }
+  }
+
+  if(window.MutationObserver){
+    var obs = new MutationObserver(function(){ tick(); onTitleChange(); });
+    if(curEl) obs.observe(curEl, { childList:true, characterData:true, subtree:true });
+    if(titleEl) obs.observe(titleEl, { childList:true, characterData:true, subtree:true });
+  } else {
+    setInterval(function(){ tick(); onTitleChange(); }, 300);
+  }
+  setTimeout(tick, 500);
+})();
+</script>
+
 </body>
 </html>
